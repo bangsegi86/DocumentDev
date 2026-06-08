@@ -1,0 +1,232 @@
+/* DocumentDev application chrome (the editor UI around the document preview). */
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  margin: 0;
+  height: 100%;
+}
+
+body {
+  font-family: -apple-system, 'Segoe UI', 'Malgun Gothic', 'Apple SD Gothic Neo', Roboto, sans-serif;
+  color: #1f2937;
+  background: #e9ebef;
+}
+
+.app {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.loading {
+  padding: 40px;
+  color: #6b7280;
+}
+
+/* ---- App header (file actions) ---- */
+.app-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  background: #ffffff;
+  border-bottom: 1px solid #d1d5db;
+  flex: 0 0 auto;
+}
+.app-brand {
+  font-weight: 700;
+  color: #1f3a5f;
+  margin-right: 8px;
+}
+.app-header button {
+  border: 1px solid #d1d5db;
+  background: #f9fafb;
+  border-radius: 6px;
+  padding: 6px 12px;
+  font-size: 13px;
+  cursor: pointer;
+}
+.app-header button:hover {
+  background: #eef1f5;
+}
+.app-header-spacer {
+  flex: 1 1 auto;
+}
+.lang-toggle {
+  font-weight: 600;
+}
+
+/* ---- Formatting toolbar ---- */
+.toolbar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 2px;
+  padding: 6px 12px;
+  background: #f7f8fa;
+  border-bottom: 1px solid #d1d5db;
+  flex: 0 0 auto;
+}
+.tb-btn {
+  min-width: 30px;
+  height: 30px;
+  border: 1px solid transparent;
+  background: transparent;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 14px;
+  padding: 0 6px;
+  color: #374151;
+}
+.tb-btn:hover:not(:disabled) {
+  background: #e5e7eb;
+}
+.tb-btn.active {
+  background: #dbeafe;
+  border-color: #93c5fd;
+  color: #1d4ed8;
+}
+.tb-btn:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+.tb-select {
+  height: 30px;
+  border: 1px solid #d1d5db;
+  border-radius: 5px;
+  background: #fff;
+  font-size: 13px;
+  padding: 0 6px;
+  cursor: pointer;
+}
+.tb-sep {
+  width: 1px;
+  height: 22px;
+  background: #d1d5db;
+  margin: 0 6px;
+}
+
+/* ---- Table grid picker ---- */
+.tb-popover-host {
+  position: relative;
+  display: inline-block;
+}
+.grid-picker {
+  position: absolute;
+  top: 34px;
+  left: 0;
+  z-index: 50;
+  background: #fff;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  padding: 10px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+}
+.grid-picker-cells {
+  display: grid;
+  grid-template-columns: repeat(8, 18px);
+  grid-auto-rows: 18px;
+  gap: 2px;
+}
+.grid-cell {
+  border: 1px solid #d1d5db;
+  border-radius: 2px;
+  background: #f9fafb;
+  cursor: pointer;
+}
+.grid-cell.active {
+  background: #93c5fd;
+  border-color: #2563eb;
+}
+.grid-picker-label {
+  text-align: center;
+  font-size: 12px;
+  color: #6b7280;
+  margin-top: 6px;
+}
+
+/* ---- Body: document preview + theme panel ---- */
+.app-body {
+  display: flex;
+  flex: 1 1 auto;
+  min-height: 0;
+}
+.app-body .doc-root {
+  flex: 1 1 auto;
+  margin: 16px;
+  background: #fff;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+.doc-title-input {
+  background: transparent;
+  border: none;
+  color: inherit;
+  font-size: 22px;
+  font-weight: 600;
+  width: 100%;
+  outline: none;
+}
+.doc-title-input::placeholder {
+  color: rgba(255, 255, 255, 0.6);
+}
+
+/* ---- Theme panel ---- */
+.theme-panel {
+  flex: 0 0 260px;
+  background: #fff;
+  border-left: 1px solid #d1d5db;
+  padding: 16px;
+  overflow-y: auto;
+}
+.theme-panel h2 {
+  font-size: 15px;
+  margin: 0 0 12px;
+}
+.theme-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 8px;
+  font-size: 13px;
+  color: #374151;
+}
+.theme-row input[type='color'] {
+  width: 38px;
+  height: 26px;
+  padding: 0;
+  border: 1px solid #d1d5db;
+  border-radius: 4px;
+  background: #fff;
+  cursor: pointer;
+}
+.theme-row select {
+  flex: 1 1 auto;
+  max-width: 150px;
+  height: 28px;
+  border: 1px solid #d1d5db;
+  border-radius: 5px;
+  font-size: 12px;
+}
+.theme-reset {
+  margin-top: 12px;
+  width: 100%;
+  border: 1px solid #d1d5db;
+  background: #f9fafb;
+  border-radius: 6px;
+  padding: 8px;
+  font-size: 13px;
+  cursor: pointer;
+}
+.theme-reset:hover {
+  background: #eef1f5;
+}

@@ -1,0 +1,19 @@
+appId: com.documentdev.app
+productName: DocumentDev
+directories:
+  output: release
+  buildResources: resources
+files:
+  - out/**/*
+  - package.json
+win:
+  target: nsis
+mac:
+  target: dmg
+  category: public.app-category.developer-tools
+linux:
+  target: AppImage
+  category: Development
+nsis:
+  oneClick: false
+  allowToChangeInstallationDirectory: true

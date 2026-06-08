@@ -1,0 +1,232 @@
+/*
+ * Shared "document look".
+ * Consumed BOTH by the live editor preview and by the exported .html (inlined),
+ * so what you see in the editor equals the exported file (WYSIWYG).
+ * All colors come from CSS variables produced by themeToCss().
+ */
+
+.doc-root {
+  --doc-topbar-bg: #1f3a5f;
+  --doc-topbar-fg: #ffffff;
+  --doc-sidebar-bg: #f3f4f6;
+  --doc-sidebar-fg: #374151;
+  --doc-heading: #2f5f8f;
+  --doc-link: #2563eb;
+  --doc-table-border: #cbd5e1;
+  --doc-table-header-bg: #f1f5f9;
+  --doc-code-bg: #f5f6f8;
+  --doc-body-fg: #1f2937;
+  --doc-font: -apple-system, 'Segoe UI', 'Malgun Gothic', sans-serif;
+  --doc-font-size: 15px;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  color: var(--doc-body-fg);
+  font-family: var(--doc-font);
+}
+
+/* ---- Top bar ---- */
+.doc-topbar {
+  background: var(--doc-topbar-bg);
+  color: var(--doc-topbar-fg);
+  padding: 18px 28px;
+  font-size: 22px;
+  font-weight: 600;
+  flex: 0 0 auto;
+}
+
+/* ---- 3-pane layout ---- */
+.doc-layout {
+  display: flex;
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+.doc-sidebar {
+  flex: 0 0 260px;
+  background: var(--doc-sidebar-bg);
+  color: var(--doc-sidebar-fg);
+  padding: 20px 16px;
+  overflow-y: auto;
+  border-right: 1px solid var(--doc-table-border);
+}
+
+.doc-sidebar ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.doc-sidebar li {
+  margin: 2px 0;
+}
+
+.doc-sidebar a {
+  display: block;
+  padding: 4px 8px;
+  color: inherit;
+  text-decoration: none;
+  border-radius: 4px;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.doc-sidebar a:hover {
+  background: rgba(0, 0, 0, 0.06);
+}
+
+.doc-sidebar .toc-h1 {
+  font-weight: 600;
+  margin-top: 8px;
+}
+.doc-sidebar .toc-h2 {
+  padding-left: 14px;
+}
+.doc-sidebar .toc-h3 {
+  padding-left: 28px;
+  font-size: 13px;
+}
+
+/* ---- Content ---- */
+.doc-content {
+  flex: 1 1 auto;
+  overflow-y: auto;
+  padding: 32px 48px 120px;
+  font-size: var(--doc-font-size);
+  line-height: 1.7;
+}
+
+.doc-content h1,
+.doc-content h2,
+.doc-content h3 {
+  color: var(--doc-heading);
+  font-weight: 600;
+  line-height: 1.3;
+  scroll-margin-top: 16px;
+}
+.doc-content h1 {
+  font-size: 1.9em;
+  margin: 0.4em 0 0.5em;
+}
+.doc-content h2 {
+  font-size: 1.45em;
+  margin: 1.4em 0 0.5em;
+  border-left: 4px solid var(--doc-heading);
+  padding-left: 10px;
+}
+.doc-content h3 {
+  font-size: 1.15em;
+  margin: 1.2em 0 0.4em;
+}
+
+.doc-content p {
+  margin: 0.6em 0;
+}
+
+.doc-content a {
+  color: var(--doc-link);
+}
+
+.doc-content ul,
+.doc-content ol {
+  padding-left: 1.5em;
+  margin: 0.6em 0;
+}
+
+.doc-content blockquote {
+  border-left: 4px solid var(--doc-table-border);
+  margin: 1em 0;
+  padding: 0.2em 1em;
+  color: #4b5563;
+}
+
+.doc-content hr {
+  border: none;
+  border-top: 1px solid var(--doc-table-border);
+  margin: 1.6em 0;
+}
+
+/* ---- Inline & block code ---- */
+.doc-content code {
+  font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+  font-size: 0.88em;
+}
+.doc-content :not(pre) > code {
+  background: var(--doc-code-bg);
+  padding: 2px 5px;
+  border-radius: 4px;
+  border: 1px solid var(--doc-table-border);
+}
+.doc-content pre {
+  background: var(--doc-code-bg);
+  border: 1px solid var(--doc-table-border);
+  border-radius: 6px;
+  padding: 14px 16px;
+  overflow-x: auto;
+  margin: 1em 0;
+  line-height: 1.5;
+}
+.doc-content pre code {
+  background: none;
+  border: none;
+  padding: 0;
+  color: inherit;
+}
+
+/* ---- Tables ---- */
+.doc-content table {
+  border-collapse: collapse;
+  width: 100%;
+  margin: 1em 0;
+  overflow: hidden;
+}
+.doc-content th,
+.doc-content td {
+  border: 1px solid var(--doc-table-border);
+  padding: 8px 12px;
+  text-align: left;
+  vertical-align: top;
+}
+.doc-content th {
+  background: var(--doc-table-header-bg);
+  font-weight: 600;
+}
+.doc-content img {
+  max-width: 100%;
+  height: auto;
+}
+
+/* The ProseMirror editable surface should be borderless and fill the content pane. */
+.doc-content .ProseMirror {
+  outline: none;
+  min-height: 100%;
+}
+.doc-content .ProseMirror:focus {
+  outline: none;
+}
+
+/* Column-resize handle for editable tables (editor only). */
+.doc-content .tableWrapper {
+  overflow-x: auto;
+}
+.doc-content .column-resize-handle {
+  position: absolute;
+  right: -2px;
+  top: 0;
+  bottom: -2px;
+  width: 4px;
+  background: var(--doc-link);
+  pointer-events: none;
+}
+.doc-content .ProseMirror table .selectedCell {
+  background: rgba(37, 99, 235, 0.12);
+}
+
+/* Placeholder text for the empty editor. */
+.doc-content .ProseMirror p.is-editor-empty:first-child::before {
+  content: attr(data-placeholder);
+  float: left;
+  color: #9ca3af;
+  pointer-events: none;
+  height: 0;
+}
