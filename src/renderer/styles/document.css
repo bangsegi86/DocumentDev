@@ -34,6 +34,35 @@
   font-size: 22px;
   font-weight: 600;
   flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+/* Hamburger toggle for the left contents sidebar (editor + export). */
+.doc-sidebar-toggle {
+  background: transparent;
+  border: none;
+  color: var(--doc-topbar-fg);
+  font-size: 20px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 4px 6px;
+  border-radius: 5px;
+  flex: 0 0 auto;
+}
+.doc-sidebar-toggle:hover {
+  background: rgba(255, 255, 255, 0.15);
+}
+.doc-topbar-title {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.doc-root.sidebar-collapsed .doc-sidebar {
+  display: none;
 }
 
 /* ---- 3-pane layout ---- */

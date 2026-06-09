@@ -57,6 +57,11 @@ body {
 .app-header button:hover {
   background: #eef1f5;
 }
+.app-header button.active {
+  background: #dbeafe;
+  border-color: #93c5fd;
+  color: #1d4ed8;
+}
 .app-header-spacer {
   flex: 1 1 auto;
 }

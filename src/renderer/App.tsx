@@ -28,6 +28,8 @@ function AppHeader({
   onSaveAs,
   onExportWord,
   onFind,
+  onToggleTheme,
+  themeOpen,
   onToggleLang
 }: {
   onNew: () => void
@@ -36,6 +38,8 @@ function AppHeader({
   onSaveAs: () => void
   onExportWord: () => void
   onFind: () => void
+  onToggleTheme: () => void
+  themeOpen: boolean
   onToggleLang: () => void
 }): JSX.Element {
   const { t, lang } = useI18n()
@@ -50,6 +54,9 @@ function AppHeader({
       <button onClick={onExportWord}>{t('exportWord')}</button>
       <button onClick={onFind}>{t('find')}</button>
       <span className="app-header-spacer" />
+      <button className={themeOpen ? 'active' : ''} onClick={onToggleTheme} title={t('theme')}>
+        🎨 {t('theme')}
+      </button>
       <button className="lang-toggle" onClick={onToggleLang} title={t('language')}>
         {lang === 'ko' ? '한국어 / EN' : 'EN / 한국어'}
       </button>
@@ -179,6 +186,8 @@ function Workbench(): JSX.Element {
   const [contentEl, setContentEl] = useState<HTMLElement | null>(null)
   const trail = useScrollTrail(contentEl, toc)
   const [showFind, setShowFind] = useState(false)
+  const [sidebarOpen, setSidebarOpen] = useState(true)
+  const [themeOpen, setThemeOpen] = useState(false)
 
   // Ctrl/Cmd+F opens Find & Replace.
   useEffect(() => {
@@ -212,7 +221,7 @@ function Workbench(): JSX.Element {
       saveAs: () => void saveDocumentAs(editor),
       exportWord: () => void exportWordDocument(editor),
       toggleLang,
-      toggleTheme: () => {}
+      toggleTheme: () => setThemeOpen((v) => !v)
     }
     const off = window.api.onMenuAction((action) => handlers[action]?.())
     return off
@@ -230,6 +239,8 @@ function Workbench(): JSX.Element {
         onSaveAs={() => void saveDocumentAs(editor)}
         onExportWord={() => void exportWordDocument(editor)}
         onFind={() => setShowFind(true)}
+        onToggleTheme={() => setThemeOpen((v) => !v)}
+        themeOpen={themeOpen}
         onToggleLang={toggleLang}
       />
       <Toolbar
@@ -241,9 +252,19 @@ function Workbench(): JSX.Element {
       <ImageMenu editor={editor} />
       <div className="app-body">
         {showFind && <FindReplaceBar editor={editor} onClose={() => setShowFind(false)} />}
-        <div className="doc-root" style={themeToStyle(theme)}>
+        <div className={`doc-root ${sidebarOpen ? '' : 'sidebar-collapsed'}`} style={themeToStyle(theme)}>
           <header className="doc-topbar">
-            <EditableTitle />
+            <button
+              className="doc-sidebar-toggle"
+              type="button"
+              title={t('contents')}
+              onClick={() => setSidebarOpen((v) => !v)}
+            >
+              ☰
+            </button>
+            <span className="doc-topbar-title">
+              <EditableTitle />
+            </span>
           </header>
           <div className="doc-layout">
             <TocSidebar items={toc} onSelect={scrollToHeading} />
@@ -255,7 +276,7 @@ function Workbench(): JSX.Element {
             </div>
           </div>
         </div>
-        <ThemePanel />
+        {themeOpen && <ThemePanel />}
       </div>
     </div>
   )

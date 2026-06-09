@@ -46,6 +46,15 @@ const BREADCRUMB_SCRIPT = `
   container.addEventListener('scroll', update, { passive: true });
   window.addEventListener('resize', update);
   update();
+
+  // Hamburger: toggle the left contents sidebar.
+  var toggle = document.getElementById('doc-sidebar-toggle');
+  var root = document.querySelector('.doc-root');
+  if (toggle && root) {
+    toggle.addEventListener('click', function () {
+      root.classList.toggle('sidebar-collapsed');
+    });
+  }
 })();
 `
 
@@ -89,7 +98,7 @@ ${parts.themeCss}
 </head>
 <body>
 <div class="doc-root">
-  <header class="doc-topbar">${title}</header>
+  <header class="doc-topbar"><button class="doc-sidebar-toggle" id="doc-sidebar-toggle" type="button" aria-label="Toggle contents">&#9776;</button><span class="doc-topbar-title">${title}</span></header>
   <div class="doc-layout">
     <nav class="doc-sidebar">
 ${parts.tocHtml}
