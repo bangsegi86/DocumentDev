@@ -47,9 +47,29 @@ export function FindReplaceBar({
     }
   }, [editor])
 
+  // Scroll the current (orange) match into view. PM's scrollIntoView doesn't
+  // always fire while the find input holds focus, so scroll the DOM node directly.
+  const scrollToCurrent = (): void => {
+    requestAnimationFrame(() => {
+      editor.view.dom
+        .querySelector('.search-match-current')
+        ?.scrollIntoView({ block: 'center', behavior: 'smooth' })
+    })
+  }
+
+  const goNext = (): void => {
+    editor.commands.findNext()
+    scrollToCurrent()
+  }
+  const goPrev = (): void => {
+    editor.commands.findPrevious()
+    scrollToCurrent()
+  }
+
   const onFindChange = (value: string): void => {
     setFind(value)
     editor.commands.setSearchTerm(value)
+    scrollToCurrent()
   }
 
   const toggleCase = (): void => {
@@ -70,18 +90,18 @@ export function FindReplaceBar({
           onKeyDown={(e) => {
             if (e.key === 'Enter') {
               e.preventDefault()
-              if (e.shiftKey) editor.commands.findPrevious()
-              else editor.commands.findNext()
+              if (e.shiftKey) goPrev()
+              else goNext()
             }
           }}
         />
         <span className="find-count">
           {info.total > 0 ? `${info.current} / ${info.total}` : t('noMatches')}
         </span>
-        <button className="find-btn" title={t('prevMatch')} onClick={() => editor.commands.findPrevious()}>
+        <button className="find-btn" title={t('prevMatch')} onClick={goPrev}>
           ↑
         </button>
-        <button className="find-btn" title={t('nextMatch')} onClick={() => editor.commands.findNext()}>
+        <button className="find-btn" title={t('nextMatch')} onClick={goNext}>
           ↓
         </button>
         <button
