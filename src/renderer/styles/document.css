@@ -238,6 +238,16 @@
   z-index: 2;
 }
 
+/* Find & Replace match highlighting (editor only). */
+.doc-content .ProseMirror .search-match {
+  background: #fde68a;
+  border-radius: 2px;
+}
+.doc-content .ProseMirror .search-match-current {
+  background: #f59e0b;
+  color: #1f2937;
+}
+
 /* Placeholder text for the empty editor. */
 .doc-content .ProseMirror p.is-editor-empty:first-child::before {
   content: attr(data-placeholder);

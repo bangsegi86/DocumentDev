@@ -10,6 +10,7 @@ import { themeToStyle } from './theme/themeToCss'
 import { I18nProvider, useI18n } from './i18n/I18nContext'
 import { useDocumentStore } from './state/documentStore'
 import { TableContextMenu } from './editor/menus/TableContextMenu'
+import { FindReplaceBar } from './editor/menus/FindReplaceBar'
 import {
   newDocument,
   openDocument,
@@ -25,6 +26,7 @@ function AppHeader({
   onSave,
   onSaveAs,
   onExportWord,
+  onFind,
   onToggleLang
 }: {
   onNew: () => void
@@ -32,6 +34,7 @@ function AppHeader({
   onSave: () => void
   onSaveAs: () => void
   onExportWord: () => void
+  onFind: () => void
   onToggleLang: () => void
 }): JSX.Element {
   const { t, lang } = useI18n()
@@ -44,6 +47,7 @@ function AppHeader({
       <button onClick={onSave}>{t('save')}{dirty ? ' •' : ''}</button>
       <button onClick={onSaveAs}>{t('saveAs')}</button>
       <button onClick={onExportWord}>{t('exportWord')}</button>
+      <button onClick={onFind}>{t('find')}</button>
       <span className="app-header-spacer" />
       <button className="lang-toggle" onClick={onToggleLang} title={t('language')}>
         {lang === 'ko' ? '한국어 / EN' : 'EN / 한국어'}
@@ -158,6 +162,19 @@ function Workbench(): JSX.Element {
   const toc = useToc(editor)
   const [contentEl, setContentEl] = useState<HTMLElement | null>(null)
   const trail = useScrollTrail(contentEl, toc)
+  const [showFind, setShowFind] = useState(false)
+
+  // Ctrl/Cmd+F opens Find & Replace.
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent): void => {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'f') {
+        e.preventDefault()
+        setShowFind(true)
+      }
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [])
 
   const scrollToHeading = (id: string): void => {
     document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
@@ -196,6 +213,7 @@ function Workbench(): JSX.Element {
         onSave={() => void saveDocument(editor)}
         onSaveAs={() => void saveDocumentAs(editor)}
         onExportWord={() => void exportWordDocument(editor)}
+        onFind={() => setShowFind(true)}
         onToggleLang={toggleLang}
       />
       <Toolbar
@@ -205,6 +223,7 @@ function Workbench(): JSX.Element {
       />
       <TableContextMenu editor={editor} />
       <div className="app-body">
+        {showFind && <FindReplaceBar editor={editor} onClose={() => setShowFind(false)} />}
         <div className="doc-root" style={themeToStyle(theme)}>
           <header className="doc-topbar">
             <EditableTitle />
