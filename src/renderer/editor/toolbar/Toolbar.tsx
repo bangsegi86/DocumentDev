@@ -217,9 +217,9 @@ export function Toolbar({
       <Sep />
 
       <Btn onClick={() => editor.chain().focus().setParagraph().run()} active={s.paragraph} title={t('paragraph')}>{t('paragraph')}</Btn>
-      <Btn onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()} active={s.h1} title={t('h1')}>H1</Btn>
-      <Btn onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()} active={s.h2} title={t('h2')}>H2</Btn>
-      <Btn onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()} active={s.h3} title={t('h3')}>H3</Btn>
+      <Btn onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()} active={s.h1} title={t('h1')}>{t('h1Short')}</Btn>
+      <Btn onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()} active={s.h2} title={t('h2')}>{t('h2Short')}</Btn>
+      <Btn onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()} active={s.h3} title={t('h3')}>{t('h3Short')}</Btn>
       <Sep />
 
       <Btn onClick={() => editor.chain().focus().toggleBold().run()} active={s.bold} title={t('bold')}><b>B</b></Btn>
