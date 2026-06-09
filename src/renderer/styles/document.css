@@ -107,12 +107,12 @@
 .doc-content h1 {
   font-size: 1.9em;
   margin: 0.4em 0 0.5em;
+  padding-bottom: 0.3em;
+  border-bottom: 1px solid var(--doc-table-border);
 }
 .doc-content h2 {
   font-size: 1.45em;
   margin: 1.4em 0 0.5em;
-  border-left: 4px solid var(--doc-heading);
-  padding-left: 10px;
 }
 .doc-content h3 {
   font-size: 1.15em;
