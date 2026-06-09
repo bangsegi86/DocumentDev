@@ -4,6 +4,7 @@ import { useI18n } from '../../i18n/I18nContext'
 import { CODE_LANGUAGES } from '../../lib/languages'
 import { TableGridPicker } from './TableGridPicker'
 import { PRESET_COLORS } from '../../theme/ColorField'
+import { addNumberColumn } from '../tableNumber'
 import {
   InsertRowAbove,
   InsertRowBelow,
@@ -203,6 +204,7 @@ export function Toolbar({
           <Btn onClick={() => editor.chain().focus().deleteRow().run()} title={t('deleteRow')}><DeleteRow /></Btn>
           <Btn onClick={() => editor.chain().focus().deleteColumn().run()} title={t('deleteCol')}><DeleteColumn /></Btn>
           <Btn onClick={() => editor.chain().focus().toggleHeaderRow().run()} title={t('toggleHeaderRow')}><HeaderRow /></Btn>
+          <Btn onClick={() => addNumberColumn(editor, t('numberColumnHeader'))} title={t('numberColumn')}>№</Btn>
           <Btn onClick={() => editor.chain().focus().deleteTable().run()} title={t('deleteTable')}><DeleteTable /></Btn>
         </>
       )}

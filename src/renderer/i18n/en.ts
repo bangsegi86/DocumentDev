@@ -28,6 +28,8 @@ export const en: Record<keyof typeof ko, string> = {
   deleteCol: 'Delete column',
   toggleHeaderRow: 'Toggle header row',
   deleteTable: 'Delete table',
+  numberColumn: 'Add number column at front',
+  numberColumnHeader: 'No',
   contents: 'Contents',
   noHeadings: 'Type a heading (H1/H2/H3) in the body and it will appear here.',
   theme: 'Theme',

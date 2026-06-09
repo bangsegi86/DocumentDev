@@ -28,6 +28,8 @@ export const ko = {
   deleteCol: '열 삭제',
   toggleHeaderRow: '머리글 행 토글',
   deleteTable: '표 삭제',
+  numberColumn: '맨 앞에 번호 열 추가',
+  numberColumnHeader: '번호',
   // panels & layout
   contents: '목차',
   noHeadings: '본문에 제목(H1/H2/H3)을 입력하면 여기에 목차가 생성됩니다.',
