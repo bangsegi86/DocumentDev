@@ -13,6 +13,7 @@ const STRINGS: Record<Lang, Labels> = {
     exportWord: '워드로 내려받기…',
     quit: '종료',
     view: '보기',
+    spellcheck: '맞춤법 검사',
     toggleLang: '언어 전환 (한/영)',
     reload: '새로고침',
     devtools: '개발자 도구',
@@ -34,6 +35,7 @@ const STRINGS: Record<Lang, Labels> = {
     exportWord: 'Download as Word…',
     quit: 'Quit',
     view: 'View',
+    spellcheck: 'Spell Check',
     toggleLang: 'Toggle Language (KO/EN)',
     reload: 'Reload',
     devtools: 'Developer Tools',
@@ -89,6 +91,8 @@ export function buildMenu(lang: Lang): void {
     {
       label: t.view,
       submenu: [
+        { label: t.spellcheck, type: 'checkbox', checked: false, click: () => send('toggleSpellcheck') },
+        { type: 'separator' },
         { label: t.toggleLang, click: () => send('toggleLang') },
         { type: 'separator' },
         { label: t.reload, role: 'reload' },

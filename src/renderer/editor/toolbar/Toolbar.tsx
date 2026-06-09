@@ -163,12 +163,12 @@ function ImageInsertControl({ editor }: { editor: Editor }): JSX.Element {
 
 export function Toolbar({
   editor,
-  spellcheck,
-  onToggleSpellcheck
+  themeOpen,
+  onToggleTheme
 }: {
   editor: Editor
-  spellcheck: boolean
-  onToggleSpellcheck: () => void
+  themeOpen: boolean
+  onToggleTheme: () => void
 }): JSX.Element {
   const { t } = useI18n()
   const [showGrid, setShowGrid] = useState(false)
@@ -283,7 +283,7 @@ export function Toolbar({
       )}
 
       <span className="tb-spacer" />
-      <Btn onClick={onToggleSpellcheck} active={spellcheck} title={t('spellcheck')}>ABC✓</Btn>
+      <Btn onClick={onToggleTheme} active={themeOpen} title={t('theme')}>🎨</Btn>
     </div>
   )
 }

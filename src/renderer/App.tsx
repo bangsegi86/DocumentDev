@@ -64,20 +64,14 @@ function AppHeader({
   onNew,
   onOpen,
   onSave,
-  onSetLogo,
-  onToggleTheme,
-  themeOpen,
-  onToggleLang
+  onSetLogo
 }: {
   onNew: () => void
   onOpen: () => void
   onSave: () => void
   onSetLogo: () => void
-  onToggleTheme: () => void
-  themeOpen: boolean
-  onToggleLang: () => void
 }): JSX.Element {
-  const { t, lang } = useI18n()
+  const { t } = useI18n()
   const dirty = useDocumentStore((s) => s.dirty)
   return (
     <header className="app-header">
@@ -99,12 +93,6 @@ function AppHeader({
       <span className="app-header-spacer" />
       <button className="icon-btn" onClick={onSetLogo} title={t('topbarLogo')} aria-label={t('topbarLogo')}>
         <LogoIcon />
-      </button>
-      <button className={themeOpen ? 'active' : ''} onClick={onToggleTheme} title={t('theme')}>
-        🎨 {t('theme')}
-      </button>
-      <button className="lang-toggle" onClick={onToggleLang} title={t('language')}>
-        {lang === 'ko' ? '한국어 / EN' : 'EN / 한국어'}
       </button>
     </header>
   )
@@ -295,6 +283,7 @@ function Workbench(): JSX.Element {
       exportWord: () => void exportWordDocument(editor),
       find: () => setShowFind(true),
       toggleLang,
+      toggleSpellcheck: () => setSpellcheck((v) => !v),
       toggleTheme: () => setThemeOpen((v) => !v)
     }
     const off = window.api.onMenuAction((action) => handlers[action]?.())
@@ -311,14 +300,11 @@ function Workbench(): JSX.Element {
         onOpen={() => void openDocument(editor)}
         onSave={() => void saveDocument(editor)}
         onSetLogo={() => void pickLogo()}
-        onToggleTheme={() => setThemeOpen((v) => !v)}
-        themeOpen={themeOpen}
-        onToggleLang={toggleLang}
       />
       <Toolbar
         editor={editor}
-        spellcheck={spellcheck}
-        onToggleSpellcheck={() => setSpellcheck((v) => !v)}
+        themeOpen={themeOpen}
+        onToggleTheme={() => setThemeOpen((v) => !v)}
       />
       <TableContextMenu editor={editor} />
       <ImageMenu editor={editor} />

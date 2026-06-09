@@ -70,6 +70,7 @@ export type MenuAction =
   | 'exportWord'
   | 'find'
   | 'toggleTheme'
+  | 'toggleSpellcheck'
   | 'toggleLang'
 
 /** API surface exposed to the renderer via the preload contextBridge. */
