@@ -44,6 +44,7 @@ export const ko = {
   tableBorderColor: '표 테두리 색상',
   tableHeaderBackground: '표 머리글 배경',
   codeBlockBackground: '코드 블록 배경',
+  breadcrumbColor: '브레드크럼 배경',
   bodyTextColor: '본문 글자색',
   bodyFont: '본문 글꼴',
   bodyFontSize: '본문 글자 크기',

@@ -14,6 +14,7 @@ export interface ThemeSettings {
   tableBorderColor: string
   tableHeaderBackground: string
   codeBlockBackground: string
+  breadcrumbColor: string
   bodyTextColor: string
   bodyFont: string
   bodyFontSize: string

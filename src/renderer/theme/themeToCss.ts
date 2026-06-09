@@ -13,6 +13,7 @@ export function themeToStyle(theme: ThemeSettings): CSSProperties {
     '--doc-table-border': theme.tableBorderColor,
     '--doc-table-header-bg': theme.tableHeaderBackground,
     '--doc-code-bg': theme.codeBlockBackground,
+    '--doc-breadcrumb-bg': theme.breadcrumbColor,
     '--doc-body-fg': theme.bodyTextColor,
     '--doc-font': theme.bodyFont,
     '--doc-font-size': theme.bodyFontSize
@@ -37,6 +38,7 @@ export function themeToCss(theme: ThemeSettings, selector = ':root'): string {
   --doc-table-border: ${theme.tableBorderColor};
   --doc-table-header-bg: ${theme.tableHeaderBackground};
   --doc-code-bg: ${theme.codeBlockBackground};
+  --doc-breadcrumb-bg: ${theme.breadcrumbColor};
   --doc-body-fg: ${theme.bodyTextColor};
   --doc-font: ${theme.bodyFont};
   --doc-font-size: ${theme.bodyFontSize};

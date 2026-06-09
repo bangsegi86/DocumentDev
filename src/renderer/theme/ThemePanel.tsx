@@ -15,6 +15,7 @@ type ColorKey = Extract<
   | 'tableBorderColor'
   | 'tableHeaderBackground'
   | 'codeBlockBackground'
+  | 'breadcrumbColor'
   | 'bodyTextColor'
 >
 
@@ -28,6 +29,7 @@ const COLOR_FIELDS: ColorKey[] = [
   'tableBorderColor',
   'tableHeaderBackground',
   'codeBlockBackground',
+  'breadcrumbColor',
   'bodyTextColor'
 ]
 
@@ -67,7 +69,7 @@ export function ThemePanel(): JSX.Element {
           value={theme.bodyFontSize}
           onChange={(e) => setTheme({ bodyFontSize: e.target.value })}
         >
-          {['13px', '14px', '15px', '16px', '17px', '18px'].map((s) => (
+          {['10pt', '11pt', '12pt', '13px', '14px', '15px', '16px', '17px', '18px'].map((s) => (
             <option key={s} value={s}>
               {s}
             </option>

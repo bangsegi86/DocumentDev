@@ -12,6 +12,7 @@ export const defaultTheme: ThemeSettings = {
   tableBorderColor: '#cbd5e1',
   tableHeaderBackground: '#f1f5f9',
   codeBlockBackground: '#f5f6f8',
+  breadcrumbColor: '#f8fafc',
   bodyTextColor: '#1f2937',
   bodyFont: "-apple-system, 'Segoe UI', 'Malgun Gothic', 'Apple SD Gothic Neo', Roboto, sans-serif",
   bodyFontSize: '15px'
