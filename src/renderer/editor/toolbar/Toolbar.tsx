@@ -225,7 +225,6 @@ export function Toolbar({
       <Btn onClick={() => editor.chain().focus().toggleBold().run()} active={s.bold} title={t('bold')}><b>B</b></Btn>
       <Btn onClick={() => editor.chain().focus().toggleItalic().run()} active={s.italic} title={t('italic')}><i>I</i></Btn>
       <Btn onClick={() => editor.chain().focus().toggleStrike().run()} active={s.strike} title={t('strike')}><s>S</s></Btn>
-      <Btn onClick={() => editor.chain().focus().toggleCode().run()} active={s.code} title={t('inlineCode')}>{'</>'}</Btn>
       <TextColorControl editor={editor} />
       <Sep />
 
@@ -235,6 +234,7 @@ export function Toolbar({
       <Btn onClick={() => editor.chain().focus().setHorizontalRule().run()} title={t('horizontalRule')}>―</Btn>
       <Sep />
 
+      <Btn onClick={() => editor.chain().focus().toggleCode().run()} active={s.code} title={t('inlineCode')}>{'</>'}</Btn>
       <Btn onClick={() => editor.chain().focus().toggleCodeBlock().run()} active={inCodeBlock} title={t('codeBlock')}>{'{ }'}</Btn>
       {inCodeBlock && (
         <select
