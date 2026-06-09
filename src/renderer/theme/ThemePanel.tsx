@@ -1,6 +1,7 @@
 import { useDocumentStore } from '../state/documentStore'
 import { useI18n } from '../i18n/I18nContext'
 import { FONT_OPTIONS } from './defaultTheme'
+import { ColorField } from './ColorField'
 import type { ThemeSettings } from '@shared/types'
 
 type ColorKey = Extract<
@@ -41,14 +42,12 @@ export function ThemePanel(): JSX.Element {
       <h2>{t('theme')}</h2>
 
       {COLOR_FIELDS.map((key) => (
-        <label key={key} className="theme-row">
-          <span>{t(key)}</span>
-          <input
-            type="color"
-            value={theme[key]}
-            onChange={(e) => setTheme({ [key]: e.target.value } as Partial<ThemeSettings>)}
-          />
-        </label>
+        <ColorField
+          key={key}
+          label={t(key)}
+          value={theme[key]}
+          onChange={(color) => setTheme({ [key]: color } as Partial<ThemeSettings>)}
+        />
       ))}
 
       <label className="theme-row">
