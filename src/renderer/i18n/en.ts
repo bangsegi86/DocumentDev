@@ -86,6 +86,8 @@ export const en: Record<keyof typeof ko, string> = {
   imageConfirm: 'OK',
   imageDelete: 'Delete',
   deleteImageQuestion: 'Delete this image?',
+  topbarLogo: 'Top bar logo (CI)',
+  removeLogo: 'Remove logo',
   unsavedTitle: 'Unsaved changes',
   unsavedMessage: 'Continue without saving your changes?',
   discard: 'Discard',

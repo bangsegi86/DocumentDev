@@ -88,6 +88,8 @@ export const ko = {
   imageConfirm: '확인',
   imageDelete: '삭제',
   deleteImageQuestion: '이 이미지를 삭제하시겠습니까?',
+  topbarLogo: '상단바 로고(CI)',
+  removeLogo: '로고 제거',
   unsavedTitle: '저장되지 않은 변경사항',
   unsavedMessage: '변경사항을 저장하지 않고 계속하시겠습니까?',
   discard: '저장 안 함',

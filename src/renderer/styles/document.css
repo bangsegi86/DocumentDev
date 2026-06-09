@@ -39,21 +39,6 @@
   gap: 12px;
 }
 
-/* Hamburger toggle for the left contents sidebar (editor + export). */
-.doc-sidebar-toggle {
-  background: transparent;
-  border: none;
-  color: var(--doc-topbar-fg);
-  font-size: 20px;
-  line-height: 1;
-  cursor: pointer;
-  padding: 4px 6px;
-  border-radius: 5px;
-  flex: 0 0 auto;
-}
-.doc-sidebar-toggle:hover {
-  background: rgba(255, 255, 255, 0.15);
-}
 .doc-topbar-title {
   flex: 1 1 auto;
   min-width: 0;
@@ -61,8 +46,73 @@
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-.doc-root.sidebar-collapsed .doc-sidebar {
+
+/* Square logo / CI shown left of the title in the top bar. */
+.doc-logo-wrap {
+  position: relative;
+  flex: 0 0 auto;
+  display: inline-flex;
+}
+.doc-logo {
+  width: 36px;
+  height: 36px;
+  object-fit: cover;
+  border-radius: 4px;
+  display: block;
+  background: #fff;
+}
+.doc-logo-wrap .doc-logo {
+  cursor: pointer;
+}
+.doc-logo-remove {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  width: 16px;
+  height: 16px;
+  border: none;
+  border-radius: 50%;
+  background: #dc2626;
+  color: #fff;
+  font-size: 12px;
+  line-height: 1;
+  cursor: pointer;
   display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+}
+.doc-logo-wrap:hover .doc-logo-remove {
+  display: inline-flex;
+}
+
+/* Hamburger toggle now lives at the top of the left contents sidebar. */
+.doc-sidebar-toggle {
+  background: transparent;
+  border: none;
+  color: inherit;
+  font-size: 20px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 5px;
+  margin-bottom: 8px;
+}
+.doc-sidebar-toggle:hover {
+  background: rgba(0, 0, 0, 0.08);
+}
+/* Collapsed: shrink the sidebar to just the hamburger; hide the TOC list. */
+.doc-root.sidebar-collapsed .doc-sidebar {
+  flex: 0 0 auto;
+  width: auto;
+  padding: 8px;
+  overflow: hidden;
+}
+.doc-root.sidebar-collapsed .doc-toc {
+  display: none;
+}
+.doc-root.sidebar-collapsed .doc-sidebar-toggle {
+  margin-bottom: 0;
 }
 
 /* ---- 3-pane layout ---- */

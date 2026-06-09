@@ -22,7 +22,8 @@ const STRINGS: Record<Lang, Labels> = {
     cut: '잘라내기',
     copy: '복사',
     paste: '붙여넣기',
-    selectAll: '모두 선택'
+    selectAll: '모두 선택',
+    find: '찾기…'
   },
   en: {
     file: 'File',
@@ -42,7 +43,8 @@ const STRINGS: Record<Lang, Labels> = {
     cut: 'Cut',
     copy: 'Copy',
     paste: 'Paste',
-    selectAll: 'Select All'
+    selectAll: 'Select All',
+    find: 'Find…'
   }
 }
 
@@ -79,7 +81,9 @@ export function buildMenu(lang: Lang): void {
         { label: t.cut, role: 'cut' },
         { label: t.copy, role: 'copy' },
         { label: t.paste, role: 'paste' },
-        { label: t.selectAll, role: 'selectAll' }
+        { label: t.selectAll, role: 'selectAll' },
+        { type: 'separator' },
+        { label: t.find, accelerator: 'CmdOrCtrl+F', click: () => send('find') }
       ]
     },
     {

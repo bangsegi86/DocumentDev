@@ -51,7 +51,27 @@ console.log('== exported HTML structure ==')
 assert(html.startsWith('<!doctype html>'), 'has doctype')
 assert(html.includes('<span class="doc-topbar-title">RMS Interface Doc</span>'), 'top bar shows title')
 assert(html.includes('id="doc-sidebar-toggle"'), 'export has sidebar hamburger toggle')
+assert(
+  html.indexOf('id="doc-sidebar-toggle"') > html.indexOf('class="doc-sidebar"'),
+  'hamburger lives inside the left sidebar (not the top bar)'
+)
 assert(html.includes('class="doc-sidebar"'), 'has left sidebar')
+
+// Top-bar logo (CI) round-trips and renders before the title when set.
+const logoFile: DocFile = {
+  version: 1,
+  title: 'Logo',
+  lang: 'ko',
+  theme: { ...defaultTheme, logoDataUrl: 'data:image/png;base64,AAAA' },
+  tiptapDoc: doc
+}
+const logoHtml = exportHtml(logoFile)
+assert(logoHtml.includes('<img class="doc-logo" src="data:image/png;base64,AAAA"'), 'top bar renders logo image')
+assert(
+  logoHtml.indexOf('class="doc-logo"') < logoHtml.indexOf('class="doc-topbar-title"'),
+  'logo is positioned before the title'
+)
+assert(extractPayload(logoHtml)!.theme.logoDataUrl === 'data:image/png;base64,AAAA', 'logo round-trips in payload')
 assert(html.includes('class="doc-content"'), 'has center content')
 assert(html.includes('id="doc-breadcrumb"'), 'has breadcrumb element')
 assert(html.includes("querySelector('.doc-content')"), 'has breadcrumb scroll script')

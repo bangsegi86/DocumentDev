@@ -42,6 +42,7 @@ export function exportHtml(docFile: DocFile): string {
   return renderDocumentHtml({
     title: docFile.title || docFile.theme.titleText,
     lang: docFile.lang,
+    logoDataUrl: docFile.theme.logoDataUrl || '',
     themeCss,
     tocHtml,
     bodyHtml,

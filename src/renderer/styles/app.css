@@ -62,6 +62,26 @@ body {
   border-color: #93c5fd;
   color: #1d4ed8;
 }
+/* Icon-only header buttons (new / open / save / logo). */
+.app-header button.icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px;
+  color: #4b5563;
+}
+.app-header button.icon-btn:hover {
+  color: #1f2937;
+}
+/* Save: gray when clean, blue/highlighted when there are unsaved changes. */
+.app-header button.save-icon {
+  color: #9ca3af;
+}
+.app-header button.save-icon.dirty {
+  color: #2563eb;
+  background: #eff6ff;
+  border-color: #93c5fd;
+}
 .app-header-spacer {
   flex: 1 1 auto;
 }

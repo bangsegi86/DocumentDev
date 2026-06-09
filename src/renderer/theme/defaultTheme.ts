@@ -3,6 +3,7 @@ import type { ThemeSettings } from '@shared/types'
 /** Default theme mirroring the Mushiny "RMS Interface Doc" look from the reference. */
 export const defaultTheme: ThemeSettings = {
   titleText: 'RMS Interface Doc',
+  logoDataUrl: '',
   topBarColor: '#1f3a5f',
   topBarTextColor: '#ffffff',
   sidebarColor: '#f3f4f6',

@@ -5,6 +5,8 @@ export type Lang = 'ko' | 'en'
 /** Per-document visual theme. Defaults mirror the Mushiny "RMS Interface Doc" look. */
 export interface ThemeSettings {
   titleText: string
+  /** Optional square logo/CI shown left of the title in the top bar (data URI). */
+  logoDataUrl: string
   topBarColor: string
   topBarTextColor: string
   sidebarColor: string
@@ -66,6 +68,7 @@ export type MenuAction =
   | 'save'
   | 'saveAs'
   | 'exportWord'
+  | 'find'
   | 'toggleTheme'
   | 'toggleLang'
 

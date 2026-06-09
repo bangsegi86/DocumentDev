@@ -69,6 +69,7 @@ export function escapeHtml(text: string): string {
 interface TemplateParts {
   title: string
   lang: string
+  logoDataUrl: string
   themeCss: string
   tocHtml: string
   bodyHtml: string
@@ -82,6 +83,9 @@ interface TemplateParts {
  */
 export function renderDocumentHtml(parts: TemplateParts): string {
   const title = escapeHtml(parts.title || 'Document')
+  const logo = parts.logoDataUrl
+    ? `<img class="doc-logo" src="${escapeHtml(parts.logoDataUrl)}" alt="logo" />`
+    : ''
   return `<!doctype html>
 <html lang="${escapeHtml(parts.lang)}">
 <head>
@@ -98,10 +102,13 @@ ${parts.themeCss}
 </head>
 <body>
 <div class="doc-root">
-  <header class="doc-topbar"><button class="doc-sidebar-toggle" id="doc-sidebar-toggle" type="button" aria-label="Toggle contents">&#9776;</button><span class="doc-topbar-title">${title}</span></header>
+  <header class="doc-topbar">${logo}<span class="doc-topbar-title">${title}</span></header>
   <div class="doc-layout">
     <nav class="doc-sidebar">
+      <button class="doc-sidebar-toggle" id="doc-sidebar-toggle" type="button" aria-label="Toggle contents">&#9776;</button>
+      <div class="doc-toc">
 ${parts.tocHtml}
+      </div>
     </nav>
     <div class="doc-main">
       <div class="doc-breadcrumb" id="doc-breadcrumb"></div>

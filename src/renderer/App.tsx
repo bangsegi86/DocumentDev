@@ -21,13 +21,50 @@ import {
 } from './state/fileActions'
 import type { MenuAction } from '@shared/types'
 
+/** Shared SVG props for the 18px line icons used in the header. */
+const ICON = {
+  viewBox: '0 0 24 24',
+  width: 18,
+  height: 18,
+  fill: 'none',
+  stroke: 'currentColor',
+  strokeWidth: 2,
+  strokeLinecap: 'round' as const,
+  strokeLinejoin: 'round' as const
+}
+
+const NewIcon = (): JSX.Element => (
+  <svg {...ICON}>
+    <path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z" />
+    <path d="M14 3v6h6" />
+    <path d="M12 12v6M9 15h6" />
+  </svg>
+)
+const OpenIcon = (): JSX.Element => (
+  <svg {...ICON}>
+    <path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+  </svg>
+)
+const SaveIcon = (): JSX.Element => (
+  <svg {...ICON}>
+    <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z" />
+    <path d="M17 21v-8H7v8" />
+    <path d="M7 3v5h8" />
+  </svg>
+)
+const LogoIcon = (): JSX.Element => (
+  <svg {...ICON}>
+    <rect x="3" y="3" width="18" height="18" rx="2" />
+    <circle cx="9" cy="9" r="2" />
+    <path d="m21 15-5-5L5 21" />
+  </svg>
+)
+
 function AppHeader({
   onNew,
   onOpen,
   onSave,
-  onSaveAs,
-  onExportWord,
-  onFind,
+  onSetLogo,
   onToggleTheme,
   themeOpen,
   onToggleLang
@@ -35,9 +72,7 @@ function AppHeader({
   onNew: () => void
   onOpen: () => void
   onSave: () => void
-  onSaveAs: () => void
-  onExportWord: () => void
-  onFind: () => void
+  onSetLogo: () => void
   onToggleTheme: () => void
   themeOpen: boolean
   onToggleLang: () => void
@@ -47,13 +82,24 @@ function AppHeader({
   return (
     <header className="app-header">
       <span className="app-brand">DocumentDev</span>
-      <button onClick={onNew}>{t('newDoc')}</button>
-      <button onClick={onOpen}>{t('open')}</button>
-      <button onClick={onSave}>{t('save')}{dirty ? ' •' : ''}</button>
-      <button onClick={onSaveAs}>{t('saveAs')}</button>
-      <button onClick={onExportWord}>{t('exportWord')}</button>
-      <button onClick={onFind}>{t('find')}</button>
+      <button className="icon-btn" onClick={onNew} title={t('newDoc')} aria-label={t('newDoc')}>
+        <NewIcon />
+      </button>
+      <button className="icon-btn" onClick={onOpen} title={t('open')} aria-label={t('open')}>
+        <OpenIcon />
+      </button>
+      <button
+        className={`icon-btn save-icon ${dirty ? 'dirty' : ''}`}
+        onClick={onSave}
+        title={t('save')}
+        aria-label={t('save')}
+      >
+        <SaveIcon />
+      </button>
       <span className="app-header-spacer" />
+      <button className="icon-btn" onClick={onSetLogo} title={t('topbarLogo')} aria-label={t('topbarLogo')}>
+        <LogoIcon />
+      </button>
       <button className={themeOpen ? 'active' : ''} onClick={onToggleTheme} title={t('theme')}>
         🎨 {t('theme')}
       </button>
@@ -74,6 +120,26 @@ function EditableTitle(): JSX.Element {
       onChange={(e) => setTitle(e.target.value)}
       spellCheck={false}
     />
+  )
+}
+
+/** Square logo/CI in the top bar (editor): click to replace, × to remove. */
+function TopbarLogo({ onReplace }: { onReplace: () => void }): JSX.Element | null {
+  const { t } = useI18n()
+  const logo = useDocumentStore((s) => s.theme.logoDataUrl)
+  const setTheme = useDocumentStore((s) => s.setTheme)
+  if (!logo) return null
+  return (
+    <span className="doc-logo-wrap">
+      <img className="doc-logo" src={logo} alt="logo" title={t('topbarLogo')} onClick={onReplace} />
+      <button
+        className="doc-logo-remove"
+        title={t('removeLogo')}
+        onClick={() => setTheme({ logoDataUrl: '' })}
+      >
+        ×
+      </button>
+    </span>
   )
 }
 
@@ -211,6 +277,13 @@ function Workbench(): JSX.Element {
     window.api.setMenuLang(next)
   }
 
+  const pickLogo = async (): Promise<void> => {
+    const res = await window.api.openImage()
+    if (!res.canceled && res.dataUri) {
+      useDocumentStore.getState().setTheme({ logoDataUrl: res.dataUri })
+    }
+  }
+
   // Wire native menu actions (and keyboard accelerators) to the same handlers.
   useEffect(() => {
     if (!editor) return
@@ -220,6 +293,7 @@ function Workbench(): JSX.Element {
       save: () => void saveDocument(editor),
       saveAs: () => void saveDocumentAs(editor),
       exportWord: () => void exportWordDocument(editor),
+      find: () => setShowFind(true),
       toggleLang,
       toggleTheme: () => setThemeOpen((v) => !v)
     }
@@ -236,9 +310,7 @@ function Workbench(): JSX.Element {
         onNew={() => newDocument(editor)}
         onOpen={() => void openDocument(editor)}
         onSave={() => void saveDocument(editor)}
-        onSaveAs={() => void saveDocumentAs(editor)}
-        onExportWord={() => void exportWordDocument(editor)}
-        onFind={() => setShowFind(true)}
+        onSetLogo={() => void pickLogo()}
         onToggleTheme={() => setThemeOpen((v) => !v)}
         themeOpen={themeOpen}
         onToggleLang={toggleLang}
@@ -254,20 +326,18 @@ function Workbench(): JSX.Element {
         {showFind && <FindReplaceBar editor={editor} onClose={() => setShowFind(false)} />}
         <div className={`doc-root ${sidebarOpen ? '' : 'sidebar-collapsed'}`} style={themeToStyle(theme)}>
           <header className="doc-topbar">
-            <button
-              className="doc-sidebar-toggle"
-              type="button"
-              title={t('contents')}
-              onClick={() => setSidebarOpen((v) => !v)}
-            >
-              ☰
-            </button>
+            <TopbarLogo onReplace={() => void pickLogo()} />
             <span className="doc-topbar-title">
               <EditableTitle />
             </span>
           </header>
           <div className="doc-layout">
-            <TocSidebar items={toc} onSelect={scrollToHeading} />
+            <TocSidebar
+              items={toc}
+              onSelect={scrollToHeading}
+              collapsed={!sidebarOpen}
+              onToggle={() => setSidebarOpen((v) => !v)}
+            />
             <div className="doc-main">
               <Breadcrumb trail={trail} onSelect={scrollToHeading} />
               <main className="doc-content" ref={setContentEl}>
