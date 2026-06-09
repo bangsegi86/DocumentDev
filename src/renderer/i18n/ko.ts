@@ -92,5 +92,5 @@ export const ko = {
   rows: '행',
   cols: '열',
   insert: '삽입',
-  bodyContentPlaceholder: "여기에 문서 내용을 작성하세요. '/' 를 입력하면 빠른 삽입 메뉴가 열립니다."
+  bodyContentPlaceholder: '여기에 문서 내용을 작성하세요. 위 툴바로 제목·표·코드 블록·이미지를 삽입할 수 있습니다.'
 } as const

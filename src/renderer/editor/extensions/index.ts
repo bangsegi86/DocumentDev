@@ -7,7 +7,6 @@ import Placeholder from '@tiptap/extension-placeholder'
 import TextStyle from '@tiptap/extension-text-style'
 import type { Extensions } from '@tiptap/core'
 import { HeadingWithId } from './HeadingWithId'
-import { SlashMenu } from './SlashMenu'
 import { SearchReplace } from './SearchReplace'
 import { TableCellBg, TableHeaderBg } from './TableCellBg'
 import { TextColor } from './TextColor'
@@ -48,7 +47,6 @@ export function buildExtensions(options: BuildOptions = {}): Extensions {
       Placeholder.configure({
         placeholder: options.placeholder ?? ''
       }),
-      SlashMenu,
       SearchReplace
     )
   }
