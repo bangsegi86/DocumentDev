@@ -44,7 +44,7 @@ export const useDocumentStore = create<DocumentState>((set) => ({
   setLang: (lang) => set({ lang }),
   setTheme: (patch) => set((s) => ({ theme: { ...s.theme, ...patch }, dirty: true })),
   resetTheme: () => set((s) => ({ theme: { ...defaultTheme, titleText: s.title }, dirty: true })),
-  markDirty: () => set({ dirty: true }),
+  markDirty: () => set((s) => (s.dirty ? s : { dirty: true })),
   markClean: () => set({ dirty: false }),
   setFilePath: (filePath) => set({ filePath }),
   loadDocument: ({ filePath, title, lang, theme, doc }) =>

@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import type { Editor } from '@tiptap/react'
+import { useEditorState, type Editor } from '@tiptap/react'
 import { useI18n } from '../../i18n/I18nContext'
 import { CODE_LANGUAGES } from '../../lib/languages'
 import { TableGridPicker } from './TableGridPicker'
@@ -48,7 +48,10 @@ function TextColorControl({ editor }: { editor: Editor }): JSX.Element {
   const { t } = useI18n()
   const [open, setOpen] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
-  const current = (editor.getAttributes('textStyle').color as string) || '#1f2937'
+  const current = useEditorState({
+    editor,
+    selector: ({ editor }) => (editor.getAttributes('textStyle').color as string) || '#1f2937'
+  })
 
   useEffect(() => {
     if (!open) return
@@ -170,9 +173,33 @@ export function Toolbar({
   const { t } = useI18n()
   const [showGrid, setShowGrid] = useState(false)
 
-  const inCodeBlock = editor.isActive('codeBlock')
-  const inTable = editor.isActive('table')
-  const currentLang = (editor.getAttributes('codeBlock').language as string) || 'plaintext'
+  // Subscribe only to the toolbar's reactive flags (deepEqual): the toolbar
+  // re-renders when formatting state changes, NOT on every keystroke.
+  const s = useEditorState({
+    editor,
+    selector: ({ editor }) => ({
+      canUndo: editor.can().undo(),
+      canRedo: editor.can().redo(),
+      paragraph: editor.isActive('paragraph'),
+      h1: editor.isActive('heading', { level: 1 }),
+      h2: editor.isActive('heading', { level: 2 }),
+      h3: editor.isActive('heading', { level: 3 }),
+      bold: editor.isActive('bold'),
+      italic: editor.isActive('italic'),
+      strike: editor.isActive('strike'),
+      code: editor.isActive('code'),
+      bulletList: editor.isActive('bulletList'),
+      orderedList: editor.isActive('orderedList'),
+      blockquote: editor.isActive('blockquote'),
+      inCodeBlock: editor.isActive('codeBlock'),
+      codeLang: (editor.getAttributes('codeBlock').language as string) || 'plaintext',
+      inTable: editor.isActive('table'),
+      link: editor.isActive('link')
+    })
+  })
+  const inCodeBlock = s.inCodeBlock
+  const inTable = s.inTable
+  const currentLang = s.codeLang
 
   const toggleLink = (): void => {
     if (editor.isActive('link')) {
@@ -185,26 +212,26 @@ export function Toolbar({
 
   return (
     <div className="toolbar">
-      <Btn onClick={() => editor.chain().focus().undo().run()} title={t('undo')} disabled={!editor.can().undo()}>↶</Btn>
-      <Btn onClick={() => editor.chain().focus().redo().run()} title={t('redo')} disabled={!editor.can().redo()}>↷</Btn>
+      <Btn onClick={() => editor.chain().focus().undo().run()} title={t('undo')} disabled={!s.canUndo}>↶</Btn>
+      <Btn onClick={() => editor.chain().focus().redo().run()} title={t('redo')} disabled={!s.canRedo}>↷</Btn>
       <Sep />
 
-      <Btn onClick={() => editor.chain().focus().setParagraph().run()} active={editor.isActive('paragraph')} title={t('paragraph')}>{t('paragraph')}</Btn>
-      <Btn onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()} active={editor.isActive('heading', { level: 1 })} title={t('h1')}>H1</Btn>
-      <Btn onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()} active={editor.isActive('heading', { level: 2 })} title={t('h2')}>H2</Btn>
-      <Btn onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()} active={editor.isActive('heading', { level: 3 })} title={t('h3')}>H3</Btn>
+      <Btn onClick={() => editor.chain().focus().setParagraph().run()} active={s.paragraph} title={t('paragraph')}>{t('paragraph')}</Btn>
+      <Btn onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()} active={s.h1} title={t('h1')}>H1</Btn>
+      <Btn onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()} active={s.h2} title={t('h2')}>H2</Btn>
+      <Btn onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()} active={s.h3} title={t('h3')}>H3</Btn>
       <Sep />
 
-      <Btn onClick={() => editor.chain().focus().toggleBold().run()} active={editor.isActive('bold')} title={t('bold')}><b>B</b></Btn>
-      <Btn onClick={() => editor.chain().focus().toggleItalic().run()} active={editor.isActive('italic')} title={t('italic')}><i>I</i></Btn>
-      <Btn onClick={() => editor.chain().focus().toggleStrike().run()} active={editor.isActive('strike')} title={t('strike')}><s>S</s></Btn>
-      <Btn onClick={() => editor.chain().focus().toggleCode().run()} active={editor.isActive('code')} title={t('inlineCode')}>{'</>'}</Btn>
+      <Btn onClick={() => editor.chain().focus().toggleBold().run()} active={s.bold} title={t('bold')}><b>B</b></Btn>
+      <Btn onClick={() => editor.chain().focus().toggleItalic().run()} active={s.italic} title={t('italic')}><i>I</i></Btn>
+      <Btn onClick={() => editor.chain().focus().toggleStrike().run()} active={s.strike} title={t('strike')}><s>S</s></Btn>
+      <Btn onClick={() => editor.chain().focus().toggleCode().run()} active={s.code} title={t('inlineCode')}>{'</>'}</Btn>
       <TextColorControl editor={editor} />
       <Sep />
 
-      <Btn onClick={() => editor.chain().focus().toggleBulletList().run()} active={editor.isActive('bulletList')} title={t('bulletList')}>•</Btn>
-      <Btn onClick={() => editor.chain().focus().toggleOrderedList().run()} active={editor.isActive('orderedList')} title={t('orderedList')}>1.</Btn>
-      <Btn onClick={() => editor.chain().focus().toggleBlockquote().run()} active={editor.isActive('blockquote')} title={t('blockquote')}>❝</Btn>
+      <Btn onClick={() => editor.chain().focus().toggleBulletList().run()} active={s.bulletList} title={t('bulletList')}>•</Btn>
+      <Btn onClick={() => editor.chain().focus().toggleOrderedList().run()} active={s.orderedList} title={t('orderedList')}>1.</Btn>
+      <Btn onClick={() => editor.chain().focus().toggleBlockquote().run()} active={s.blockquote} title={t('blockquote')}>❝</Btn>
       <Btn onClick={() => editor.chain().focus().setHorizontalRule().run()} title={t('horizontalRule')}>―</Btn>
       <Sep />
 
@@ -238,7 +265,7 @@ export function Toolbar({
         )}
       </div>
       <ImageInsertControl editor={editor} />
-      <Btn onClick={toggleLink} active={editor.isActive('link')} title={t('link')}>🔗</Btn>
+      <Btn onClick={toggleLink} active={s.link} title={t('link')}>🔗</Btn>
 
       {inTable && (
         <>

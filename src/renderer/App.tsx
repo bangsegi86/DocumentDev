@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { EditorContent, useEditor } from '@tiptap/react'
 import { buildExtensions } from './editor/extensions'
 import { Toolbar } from './editor/toolbar/Toolbar'
@@ -75,20 +75,22 @@ function EditableTitle(): JSX.Element {
  * the top of the scrolled content area. Recomputes on scroll and when headings
  * change. Deeper levels reset when a higher-level heading is passed.
  */
-function useScrollTrail(
-  container: HTMLElement | null,
-  items: TocItem[]
-): TocItem[] {
+function useScrollTrail(container: HTMLElement | null, items: TocItem[]): TocItem[] {
   const [trail, setTrail] = useState<TocItem[]>([])
+  const itemsRef = useRef<TocItem[]>(items)
+  itemsRef.current = items
+  const computeRef = useRef<() => void>(() => {})
 
   useEffect(() => {
     if (!container) return
+    // Measuring getBoundingClientRect() forces layout — only do it on scroll
+    // (and once when headings change), never on every keystroke.
     const compute = (): void => {
       const threshold = container.getBoundingClientRect().top + 90
       let h1: TocItem | null = null
       let h2: TocItem | null = null
       let h3: TocItem | null = null
-      for (const item of items) {
+      for (const item of itemsRef.current) {
         const el = document.getElementById(item.id)
         if (!el) continue
         if (el.getBoundingClientRect().top <= threshold) {
@@ -106,12 +108,22 @@ function useScrollTrail(
           break // headings are in document order
         }
       }
-      setTrail([h1, h2, h3].filter((x): x is TocItem => x !== null))
+      const next = [h1, h2, h3].filter((x): x is TocItem => x !== null)
+      setTrail((prev) =>
+        prev.length === next.length && prev.every((p, i) => p.id === next[i].id) ? prev : next
+      )
     }
+    computeRef.current = compute
     compute()
     container.addEventListener('scroll', compute, { passive: true })
     return () => container.removeEventListener('scroll', compute)
-  }, [container, items])
+  }, [container])
+
+  // When headings change, recompute once (no scroll-listener churn).
+  useEffect(() => {
+    const id = requestAnimationFrame(() => computeRef.current())
+    return () => cancelAnimationFrame(id)
+  }, [items])
 
   return trail
 }
@@ -150,6 +162,9 @@ function Workbench(): JSX.Element {
   const editor = useEditor({
     extensions: buildExtensions({ placeholder: t('bodyContentPlaceholder') }),
     content: '',
+    // Don't re-render the whole Workbench on every transaction (typing perf).
+    // Components that need live editor state subscribe via useEditorState.
+    shouldRerenderOnTransaction: false,
     // Spellcheck starts off; the toolbar toggle controls it (see effect below).
     editorProps: { attributes: { spellcheck: 'false' } },
     onUpdate: () => markDirty()

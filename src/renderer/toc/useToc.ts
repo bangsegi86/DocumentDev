@@ -1,23 +1,39 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import type { Editor } from '@tiptap/react'
 import type { Transaction } from '@tiptap/pm/state'
-import { deriveToc, type TocItem } from './toc'
+import { deriveTocFromDoc, tocEquals, type TocItem } from './toc'
 
-/** Live list of headings derived from the editor, updated on every doc change. */
+/**
+ * Live list of headings derived from the editor. To keep typing fast, the TOC
+ * is recomputed by walking the ProseMirror doc (not editor.getJSON()), debounced
+ * (~250ms), and only applied to state when it actually changed.
+ */
 export function useToc(editor: Editor | null): TocItem[] {
   const [items, setItems] = useState<TocItem[]>([])
+  const itemsRef = useRef<TocItem[]>([])
 
   useEffect(() => {
     if (!editor) return
-    const refresh = (): void => setItems(deriveToc(editor.getJSON()))
-    // Listen to 'transaction' (not 'update'): it fires for programmatic
-    // setContent too (used by Open), so the TOC refreshes when a file is loaded.
-    const onTransaction = ({ transaction }: { transaction: Transaction }): void => {
-      if (transaction.docChanged) refresh()
+    let timer: ReturnType<typeof setTimeout> | undefined
+
+    const recompute = (): void => {
+      const next = deriveTocFromDoc(editor.state.doc)
+      if (tocEquals(next, itemsRef.current)) return
+      itemsRef.current = next
+      setItems(next)
     }
-    refresh()
+    const schedule = (): void => {
+      clearTimeout(timer)
+      timer = setTimeout(recompute, 250)
+    }
+    const onTransaction = ({ transaction }: { transaction: Transaction }): void => {
+      if (transaction.docChanged) schedule()
+    }
+
+    recompute()
     editor.on('transaction', onTransaction)
     return () => {
+      clearTimeout(timer)
       editor.off('transaction', onTransaction)
     }
   }, [editor])
