@@ -177,15 +177,20 @@
 .doc-content table {
   border-collapse: collapse;
   width: 100%;
-  margin: 1em 0;
+  margin: 0.5em 0;
   overflow: hidden;
 }
 .doc-content th,
 .doc-content td {
   border: 1px solid var(--doc-table-border);
-  padding: 8px 12px;
+  padding: 6px 12px;
   text-align: left;
   vertical-align: top;
+}
+/* Cell content shouldn't add its own paragraph margins (keeps rows compact). */
+.doc-content th > p,
+.doc-content td > p {
+  margin: 0;
 }
 .doc-content th {
   background: var(--doc-table-header-bg);
