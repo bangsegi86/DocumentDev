@@ -26,9 +26,20 @@ function fitTableColumns(html: string): string {
  * (which Word actually honors), and tables are fit to the page width with
  * equal columns derived from each table's actual column count (any number).
  */
+/** Word ignores data-align + margin:auto, but honors the legacy `align` attr on
+ *  a block wrapper, so wrap center/right-aligned images in <p align="...">. */
+function wordAlignImages(html: string): string {
+  return html.replace(
+    /<img\b[^>]*\bdata-align="(center|right)"[^>]*>/g,
+    (m, a) => `<p align="${a}">${m}</p>`
+  )
+}
+
 export function exportWord(docFile: DocFile): string {
-  const body = fitTableColumns(
-    inlineColors(highlightCodeBlocks(generateHTML(docFile.tiptapDoc, buildExtensions({ forExport: true }))))
+  const body = wordAlignImages(
+    fitTableColumns(
+      inlineColors(highlightCodeBlocks(generateHTML(docFile.tiptapDoc, buildExtensions({ forExport: true }))))
+    )
   )
   const title = escapeHtml(docFile.title || docFile.theme.titleText)
   const theme = docFile.theme
@@ -58,6 +69,7 @@ th, td { border: 1px solid ${theme.tableBorderColor}; padding: 4px 7px; vertical
 th { background: ${theme.tableHeaderBackground}; }
 pre { background: ${theme.codeBlockBackground}; border: 1px solid ${theme.tableBorderColor}; padding: 10px; font-family: Consolas, monospace; font-size: 10pt; white-space: pre-wrap; }
 code { font-family: Consolas, monospace; }
+img { max-width: 100%; height: auto; }
 blockquote { border-left: 3px solid ${theme.tableBorderColor}; margin-left: 0; padding-left: 12px; color: #555; }
 ${HIGHLIGHT_CSS}
 </style>

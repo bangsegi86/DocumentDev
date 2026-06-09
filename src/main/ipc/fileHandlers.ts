@@ -1,6 +1,12 @@
 import { ipcMain, BrowserWindow } from 'electron'
 import { IPC } from '../../shared/types'
-import { openFileDialog, saveFile, saveFileAsDialog, saveWordDialog } from './dialogs'
+import {
+  openFileDialog,
+  saveFile,
+  saveFileAsDialog,
+  saveWordDialog,
+  openImageDialog
+} from './dialogs'
 
 export function registerFileHandlers(): void {
   ipcMain.handle(IPC.fileOpen, (event) => {
@@ -20,5 +26,10 @@ export function registerFileHandlers(): void {
   ipcMain.handle(IPC.fileSaveWord, (event, suggestedName: string, contents: string) => {
     const win = BrowserWindow.fromWebContents(event.sender)!
     return saveWordDialog(win, suggestedName, contents)
+  })
+
+  ipcMain.handle(IPC.imageOpen, (event) => {
+    const win = BrowserWindow.fromWebContents(event.sender)!
+    return openImageDialog(win)
   })
 }

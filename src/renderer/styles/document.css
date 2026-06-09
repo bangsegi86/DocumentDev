@@ -253,6 +253,69 @@
   max-width: 100%;
   height: auto;
 }
+/* Image alignment (export-safe: data-align is a plain attribute that survives
+   generateHTML; the block image is centered/aligned via auto margins). */
+.doc-content img[data-align='left'] {
+  display: block;
+  margin: 0 auto 0 0;
+}
+.doc-content img[data-align='center'] {
+  display: block;
+  margin: 0 auto;
+}
+.doc-content img[data-align='right'] {
+  display: block;
+  margin: 0 0 0 auto;
+}
+
+/* Resizable image NodeView (editor only). */
+.doc-content .ProseMirror .doc-image-nv {
+  margin: 0.6em 0;
+}
+.doc-content .ProseMirror .doc-image-box {
+  position: relative;
+  display: block;
+  line-height: 0;
+  max-width: 100%;
+}
+.doc-content .ProseMirror .doc-image-box img {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+.doc-content .ProseMirror .doc-image-box.selected {
+  outline: 2px solid var(--doc-link);
+  outline-offset: 1px;
+}
+.doc-content .ProseMirror .doc-image-handle {
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  background: #fff;
+  border: 2px solid var(--doc-link);
+  border-radius: 50%;
+  z-index: 3;
+}
+.doc-content .ProseMirror .handle-nw {
+  top: -5px;
+  left: -5px;
+  cursor: nwse-resize;
+}
+.doc-content .ProseMirror .handle-ne {
+  top: -5px;
+  right: -5px;
+  cursor: nesw-resize;
+}
+.doc-content .ProseMirror .handle-sw {
+  bottom: -5px;
+  left: -5px;
+  cursor: nesw-resize;
+}
+.doc-content .ProseMirror .handle-se {
+  bottom: -5px;
+  right: -5px;
+  cursor: nwse-resize;
+}
 
 /* The ProseMirror editable surface should be borderless and fill the content pane. */
 .doc-content .ProseMirror {

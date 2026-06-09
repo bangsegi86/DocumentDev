@@ -42,12 +42,19 @@ export interface SaveResult {
   path?: string
 }
 
+/** Result of picking an image file (returned as a base64 data URI). */
+export interface ImageResult {
+  canceled: boolean
+  dataUri?: string
+}
+
 /** IPC channel names shared by main, preload and renderer. */
 export const IPC = {
   fileOpen: 'file:open',
   fileSave: 'file:save',
   fileSaveAs: 'file:saveAs',
   fileSaveWord: 'file:saveWord',
+  imageOpen: 'image:open',
   menuAction: 'menu:action',
   setMenuLang: 'menu:setLang'
 } as const
@@ -68,6 +75,7 @@ export interface DocApi {
   saveFile(path: string, contents: string): Promise<SaveResult>
   saveFileAs(suggestedName: string, contents: string): Promise<SaveResult>
   saveWord(suggestedName: string, contents: string): Promise<SaveResult>
+  openImage(): Promise<ImageResult>
   setMenuLang(lang: Lang): void
   onMenuAction(handler: (action: MenuAction) => void): () => void
 }

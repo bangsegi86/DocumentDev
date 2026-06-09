@@ -399,6 +399,90 @@ body {
   background: #f3f4f6;
 }
 
+/* ---- Toolbar dropdown menu (image insert) ---- */
+.tb-menu {
+  position: absolute;
+  top: 34px;
+  left: 0;
+  z-index: 60;
+  background: #fff;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.16);
+  padding: 6px;
+  display: flex;
+  flex-direction: column;
+  min-width: 170px;
+}
+.tb-menu-item {
+  text-align: left;
+  border: none;
+  background: transparent;
+  border-radius: 6px;
+  padding: 8px 10px;
+  font-size: 13px;
+  cursor: pointer;
+  color: #374151;
+}
+.tb-menu-item:hover {
+  background: #eef1f5;
+}
+
+/* ---- Image selection toolbar ---- */
+.image-menu {
+  position: fixed;
+  z-index: 130;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: #fff;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
+  padding: 5px 7px;
+}
+.image-menu .im-btn {
+  min-width: 28px;
+  height: 26px;
+  border: 1px solid #d1d5db;
+  background: #f9fafb;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 12px;
+  color: #374151;
+  padding: 0 6px;
+}
+.image-menu .im-btn:hover {
+  background: #eef1f5;
+}
+.image-menu .im-btn.active {
+  background: #dbeafe;
+  border-color: #93c5fd;
+  color: #1d4ed8;
+}
+.image-menu .im-sep {
+  width: 1px;
+  height: 20px;
+  background: #e5e7eb;
+  margin: 0 2px;
+}
+.image-menu .im-width {
+  width: 64px;
+  height: 26px;
+  border: 1px solid #d1d5db;
+  border-radius: 5px;
+  padding: 0 6px;
+  font-size: 12px;
+}
+.image-menu .im-alt {
+  width: 150px;
+  height: 26px;
+  border: 1px solid #d1d5db;
+  border-radius: 5px;
+  padding: 0 8px;
+  font-size: 12px;
+}
+
 /* ---- Table right-click context menu ---- */
 .ctx-menu {
   position: fixed;

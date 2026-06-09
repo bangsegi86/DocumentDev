@@ -10,6 +10,7 @@ import { themeToStyle } from './theme/themeToCss'
 import { I18nProvider, useI18n } from './i18n/I18nContext'
 import { useDocumentStore } from './state/documentStore'
 import { TableContextMenu } from './editor/menus/TableContextMenu'
+import { ImageMenu } from './editor/menus/ImageMenu'
 import { FindReplaceBar } from './editor/menus/FindReplaceBar'
 import {
   newDocument,
@@ -222,6 +223,7 @@ function Workbench(): JSX.Element {
         onToggleSpellcheck={() => setSpellcheck((v) => !v)}
       />
       <TableContextMenu editor={editor} />
+      <ImageMenu editor={editor} />
       <div className="app-body">
         {showFind && <FindReplaceBar editor={editor} onClose={() => setShowFind(false)} />}
         <div className="doc-root" style={themeToStyle(theme)}>

@@ -107,6 +107,57 @@ function TextColorControl({ editor }: { editor: Editor }): JSX.Element {
   )
 }
 
+/** Image insert button with a popover: upload from computer or insert by URL. */
+function ImageInsertControl({ editor }: { editor: Editor }): JSX.Element {
+  const { t } = useI18n()
+  const [open, setOpen] = useState(false)
+  const ref = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (!open) return
+    const onDoc = (e: MouseEvent): void => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false)
+    }
+    document.addEventListener('mousedown', onDoc)
+    return () => document.removeEventListener('mousedown', onDoc)
+  }, [open])
+
+  const fromFile = async (): Promise<void> => {
+    setOpen(false)
+    const res = await window.api.openImage()
+    if (!res.canceled && res.dataUri) editor.chain().focus().setImage({ src: res.dataUri }).run()
+  }
+  const fromUrl = (): void => {
+    setOpen(false)
+    const url = window.prompt(t('imagePrompt'))
+    if (url) editor.chain().focus().setImage({ src: url }).run()
+  }
+
+  return (
+    <div className="tb-popover-host" ref={ref}>
+      <button
+        type="button"
+        className="tb-btn"
+        title={t('image')}
+        onMouseDown={(e) => e.preventDefault()}
+        onClick={() => setOpen((o) => !o)}
+      >
+        🖼
+      </button>
+      {open && (
+        <div className="tb-menu">
+          <button type="button" className="tb-menu-item" onMouseDown={(e) => e.preventDefault()} onClick={() => void fromFile()}>
+            📁 {t('imageFromFile')}
+          </button>
+          <button type="button" className="tb-menu-item" onMouseDown={(e) => e.preventDefault()} onClick={fromUrl}>
+            🔗 {t('imageFromUrl')}
+          </button>
+        </div>
+      )}
+    </div>
+  )
+}
+
 export function Toolbar({
   editor,
   spellcheck,
@@ -122,11 +173,6 @@ export function Toolbar({
   const inCodeBlock = editor.isActive('codeBlock')
   const inTable = editor.isActive('table')
   const currentLang = (editor.getAttributes('codeBlock').language as string) || 'plaintext'
-
-  const insertImage = (): void => {
-    const url = window.prompt(t('imagePrompt'))
-    if (url) editor.chain().focus().setImage({ src: url }).run()
-  }
 
   const toggleLink = (): void => {
     if (editor.isActive('link')) {
@@ -191,7 +237,7 @@ export function Toolbar({
           />
         )}
       </div>
-      <Btn onClick={insertImage} title={t('image')}>🖼</Btn>
+      <ImageInsertControl editor={editor} />
       <Btn onClick={toggleLink} active={editor.isActive('link')} title={t('link')}>🔗</Btn>
 
       {inTable && (

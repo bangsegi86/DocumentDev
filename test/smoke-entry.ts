@@ -116,6 +116,29 @@ assert(word.includes('urn:schemas-microsoft-com:office:word'), 'Word export has 
 assert(/background-color:\s*#ffff00/i.test(word), 'cell background renders in Word export')
 assert(/color:\s*#ff0000/i.test(word), 'text color renders in Word export')
 
+console.log('== image: width/align/base64 survive export + round-trip ==')
+const b64 = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg=='
+const imgDoc = {
+  type: 'doc',
+  content: [
+    { type: 'image', attrs: { src: `data:image/png;base64,${b64}`, width: 300, align: 'center', alt: 'logo' } }
+  ]
+}
+const imgFile: DocFile = { version: 1, title: 'Img', lang: 'ko', theme: defaultTheme, tiptapDoc: imgDoc }
+const imgHtml = exportHtml(imgFile)
+assert(/<img[^>]*\bwidth="300"/.test(imgHtml), 'image width attribute survives generateHTML')
+assert(/<img[^>]*data-align="center"/.test(imgHtml), 'image data-align survives generateHTML')
+assert(imgHtml.includes(b64), 'base64 image embedded (self-contained)')
+assert(/<img[^>]*alt="logo"/.test(imgHtml), 'image alt survives')
+assert(imgHtml.includes("img[data-align='center']"), 'alignment CSS inlined into export')
+const imgReopened = extractPayload(imgHtml)
+assert(imgReopened !== null, 'image doc round-trips')
+const imgNode = imgReopened!.tiptapDoc.content![0]
+assert(imgNode.attrs!.width === 300 && imgNode.attrs!.align === 'center', 'image width/align persist in payload JSON')
+const imgWord = exportWord(imgFile)
+assert(/<img/.test(imgWord) && imgWord.includes(b64), 'image embedded in Word export')
+assert(/<p align="center"><img/.test(imgWord), 'centered image wrapped for Word')
+
 import { writeFileSync } from 'node:fs'
 writeFileSync('out/sample.html', html, 'utf-8')
 writeFileSync('out/sample.doc', word, 'utf-8')

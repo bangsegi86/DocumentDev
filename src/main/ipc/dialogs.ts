@@ -1,9 +1,33 @@
 import { dialog, BrowserWindow } from 'electron'
 import { readFile, writeFile } from 'fs/promises'
+import { extname } from 'path'
 import { FILE_EXTENSION } from '../../shared/constants'
-import type { OpenResult, SaveResult } from '../../shared/types'
+import type { OpenResult, SaveResult, ImageResult } from '../../shared/types'
 
 const FILTERS = [{ name: 'HTML Document', extensions: [FILE_EXTENSION] }]
+
+const IMAGE_MIME: Record<string, string> = {
+  '.png': 'image/png',
+  '.jpg': 'image/jpeg',
+  '.jpeg': 'image/jpeg',
+  '.gif': 'image/gif',
+  '.webp': 'image/webp',
+  '.svg': 'image/svg+xml',
+  '.bmp': 'image/bmp'
+}
+
+export async function openImageDialog(win: BrowserWindow): Promise<ImageResult> {
+  const { canceled, filePaths } = await dialog.showOpenDialog(win, {
+    title: 'Insert Image',
+    filters: [{ name: 'Images', extensions: ['png', 'jpg', 'jpeg', 'gif', 'webp', 'svg', 'bmp'] }],
+    properties: ['openFile']
+  })
+  if (canceled || filePaths.length === 0) return { canceled: true }
+  const path = filePaths[0]
+  const mime = IMAGE_MIME[extname(path).toLowerCase()] ?? 'application/octet-stream'
+  const buf = await readFile(path)
+  return { canceled: false, dataUri: `data:${mime};base64,${buf.toString('base64')}` }
+}
 
 export async function openFileDialog(win: BrowserWindow): Promise<OpenResult> {
   const { canceled, filePaths } = await dialog.showOpenDialog(win, {

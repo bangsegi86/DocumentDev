@@ -2,7 +2,6 @@ import StarterKit from '@tiptap/starter-kit'
 import CodeBlockLowlight from '@tiptap/extension-code-block-lowlight'
 import Table from '@tiptap/extension-table'
 import TableRow from '@tiptap/extension-table-row'
-import Image from '@tiptap/extension-image'
 import Link from '@tiptap/extension-link'
 import Placeholder from '@tiptap/extension-placeholder'
 import TextStyle from '@tiptap/extension-text-style'
@@ -12,6 +11,7 @@ import { SlashMenu } from './SlashMenu'
 import { SearchReplace } from './SearchReplace'
 import { TableCellBg, TableHeaderBg } from './TableCellBg'
 import { TextColor } from './TextColor'
+import { ResizableImage } from './ResizableImage'
 import { lowlight } from '../../lib/lowlight'
 
 interface BuildOptions {
@@ -37,7 +37,7 @@ export function buildExtensions(options: BuildOptions = {}): Extensions {
     TableRow,
     TableHeaderBg,
     TableCellBg,
-    Image.configure({ inline: false, allowBase64: true }),
+    ResizableImage.configure({ inline: false, allowBase64: true }),
     Link.configure({ openOnClick: false, autolink: true }),
     TextStyle,
     TextColor

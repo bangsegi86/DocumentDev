@@ -98,10 +98,19 @@ export function getSlashCommands(query: string): SlashCommandItem[] {
       icon: '🖼',
       search: ['image', 'picture', 'img', '이미지'],
       run: (e, r) => {
-        const url = window.prompt(dict.imagePrompt)
-        const chain = e.chain().focus().deleteRange(r)
-        if (url) chain.setImage({ src: url }).run()
-        else chain.run()
+        e.chain().focus().deleteRange(r).run()
+        // Open the native file picker (base64-embedded); fall back to a URL prompt.
+        window.api
+          .openImage()
+          .then((res) => {
+            if (!res.canceled && res.dataUri) {
+              e.chain().focus().setImage({ src: res.dataUri }).run()
+            } else {
+              const url = window.prompt(dict.imagePrompt)
+              if (url) e.chain().focus().setImage({ src: url }).run()
+            }
+          })
+          .catch(() => {})
       }
     }
   ]
