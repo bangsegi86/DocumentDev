@@ -84,6 +84,16 @@ export async function saveDocumentAs(editor: Editor): Promise<void> {
 }
 
 export async function exportWordDocument(editor: Editor): Promise<void> {
-  const doc = exportWord(currentDocFile(editor))
-  await window.api.saveWord(`${safeBaseName()}.doc`, doc)
+  try {
+    if (typeof window.api?.saveWord !== 'function') {
+      window.alert(
+        'Word export is unavailable in this running instance.\nPlease restart the app (stop and re-run "npm run dev").'
+      )
+      return
+    }
+    const doc = exportWord(currentDocFile(editor))
+    await window.api.saveWord(`${safeBaseName()}.doc`, doc)
+  } catch (e) {
+    window.alert('Word export failed: ' + (e instanceof Error ? e.message : String(e)))
+  }
 }
