@@ -603,6 +603,103 @@ body {
   box-shadow: 0 10px 28px rgba(0, 0, 0, 0.2);
   padding: 6px;
 }
+
+/* PowerPoint-style colour toolbar at the top of the table context menu. */
+.ctx-toolbar {
+  display: flex;
+  gap: 4px;
+  padding: 2px;
+}
+.ctx-tool {
+  flex: 1 1 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  background: transparent;
+  padding: 6px 4px;
+  cursor: pointer;
+  color: #1f2937;
+}
+.ctx-tool:hover {
+  background: #e8f0fe;
+}
+.ctx-tool.open {
+  background: #e8f0fe;
+  border-color: #9ec0f3;
+}
+.ctx-tool-ico {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  color: #4b5563;
+}
+.ctx-tool-A {
+  font-weight: 700;
+  font-size: 14px;
+  line-height: 1;
+  color: #1f2937;
+}
+.ctx-tool-bar {
+  width: 18px;
+  height: 4px;
+  border-radius: 1px;
+  margin-top: 2px;
+  border: 1px solid rgba(0, 0, 0, 0.18);
+}
+.ctx-tool-label {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 12px;
+  color: #374151;
+}
+
+/* Flyout palette: theme / standard / recent colours. */
+.ctx-palette {
+  position: absolute;
+  top: 56px;
+  left: 4px;
+  width: 244px;
+  background: #fff;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.24);
+  padding: 8px;
+  z-index: 10;
+}
+.ctx-pal-section {
+  font-size: 11px;
+  font-weight: 600;
+  color: #6b7280;
+  margin: 4px 2px;
+}
+.ctx-pal-row {
+  display: grid;
+  grid-template-columns: repeat(10, 1fr);
+  gap: 3px;
+  padding: 0 2px;
+}
+.ctx-pal-variations {
+  margin-top: 3px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.ctx-swatch {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  border: 1px solid rgba(0, 0, 0, 0.18);
+  border-radius: 2px;
+  padding: 0;
+  cursor: pointer;
+}
+.ctx-swatch:hover {
+  outline: 2px solid #2563eb;
+  outline-offset: 1px;
+}
 .ctx-section {
   display: flex;
   align-items: center;

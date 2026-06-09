@@ -1,7 +1,14 @@
 import { useEffect, useState } from 'react'
 import type { Editor } from '@tiptap/react'
 import { useI18n } from '../../i18n/I18nContext'
-import { PRESET_COLORS } from '../../theme/ColorField'
+import {
+  THEME_COLORS,
+  THEME_VARIATION_STEPS,
+  STANDARD_COLORS,
+  shade,
+  loadRecentColors,
+  pushRecentColor
+} from './colorPalette'
 
 interface MenuState {
   x: number
@@ -71,22 +78,96 @@ const NoFill = (): JSX.Element => (
     <path d="m3.8 3.8 8.4 8.4" />
   </svg>
 )
+const Caret = (): JSX.Element => (
+  <svg width="8" height="8" viewBox="0 0 8 8" aria-hidden>
+    <path d="M1 2.5 4 5.5 7 2.5" fill="none" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
+  </svg>
+)
+
+/** A flyout palette: Theme / Standard / Recent colours + a "none" option. */
+function ColorPalette({
+  noneLabel,
+  noneIcon,
+  onPick,
+  onNone
+}: {
+  noneLabel: string
+  noneIcon: JSX.Element
+  onPick: (color: string) => void
+  onNone: () => void
+}): JSX.Element {
+  const { t } = useI18n()
+  const recents = loadRecentColors()
+  const Swatch = ({ color }: { color: string }): JSX.Element => (
+    <button
+      type="button"
+      className="ctx-swatch"
+      style={{ background: color }}
+      title={color}
+      onClick={() => onPick(color)}
+    />
+  )
+  return (
+    <div className="ctx-palette" onMouseDown={(e) => e.stopPropagation()}>
+      <div className="ctx-pal-section">{t('themeColors')}</div>
+      <div className="ctx-pal-row">
+        {THEME_COLORS.map((c) => (
+          <Swatch key={c} color={c} />
+        ))}
+      </div>
+      <div className="ctx-pal-variations">
+        {THEME_VARIATION_STEPS.map((step) => (
+          <div className="ctx-pal-row" key={step}>
+            {THEME_COLORS.map((c) => {
+              const v = shade(c, step)
+              return <Swatch key={c + step} color={v} />
+            })}
+          </div>
+        ))}
+      </div>
+
+      <div className="ctx-pal-section">{t('standardColors')}</div>
+      <div className="ctx-pal-row">
+        {STANDARD_COLORS.map((c) => (
+          <Swatch key={c} color={c} />
+        ))}
+      </div>
+
+      {recents.length > 0 && (
+        <>
+          <div className="ctx-pal-section">{t('recentColors')}</div>
+          <div className="ctx-pal-row">
+            {recents.map((c) => (
+              <Swatch key={c} color={c} />
+            ))}
+          </div>
+        </>
+      )}
+
+      <div className="ctx-divider" />
+      <button type="button" className="ctx-action subtle" onClick={onNone}>
+        <span className="ctx-ico">{noneIcon}</span>
+        {noneLabel}
+      </button>
+    </div>
+  )
+}
 
 /**
  * Right-click menu inside tables. Operates on the cell that was clicked
- * (the cursor is moved there first), with row/column insert & delete actions
- * and PowerPoint-style fill / text colour pickers.
+ * (the cursor is moved there first): row/column insert & delete, plus
+ * PowerPoint-style Fill / Font-colour split buttons with a colour palette.
  */
 export function TableContextMenu({ editor }: { editor: Editor }): JSX.Element | null {
   const { t } = useI18n()
   const [menu, setMenu] = useState<MenuState | null>(null)
+  const [palette, setPalette] = useState<'fill' | 'text' | null>(null)
 
   useEffect(() => {
     const dom = editor.view.dom
     const onContext = (e: MouseEvent): void => {
       const coords = editor.view.posAtCoords({ left: e.clientX, top: e.clientY })
       if (!coords) return
-      // Only react inside a table; resolve the clicked position to check.
       const $pos = editor.state.doc.resolve(coords.pos)
       let inTable = false
       for (let d = $pos.depth; d > 0; d--) {
@@ -97,8 +178,8 @@ export function TableContextMenu({ editor }: { editor: Editor }): JSX.Element | 
       }
       if (!inTable) return
       e.preventDefault()
-      // Move the cursor into the clicked cell so commands act on it.
       editor.commands.setTextSelection(coords.pos)
+      setPalette(null)
       setMenu({ x: e.clientX, y: e.clientY })
     }
     dom.addEventListener('contextmenu', onContext)
@@ -107,7 +188,10 @@ export function TableContextMenu({ editor }: { editor: Editor }): JSX.Element | 
 
   useEffect(() => {
     if (!menu) return
-    const close = (): void => setMenu(null)
+    const close = (): void => {
+      setMenu(null)
+      setPalette(null)
+    }
     window.addEventListener('mousedown', close)
     window.addEventListener('scroll', close, true)
     window.addEventListener('resize', close)
@@ -123,20 +207,34 @@ export function TableContextMenu({ editor }: { editor: Editor }): JSX.Element | 
   const run = (fn: () => void): void => {
     fn()
     setMenu(null)
+    setPalette(null)
   }
-  const setCellBg = (color: string | null): void =>
-    run(() => editor.chain().focus().setCellAttribute('backgroundColor', color).run())
-  const setTextColor = (color: string | null): void =>
+  const applyFill = (color: string | null): void =>
+    run(() => {
+      editor.chain().focus().setCellAttribute('backgroundColor', color).run()
+      if (color) pushRecentColor(color)
+    })
+  const applyText = (color: string | null): void =>
     run(() => {
       const chain = editor.chain().focus()
-      if (color) chain.setColor(color).run()
-      else chain.unsetColor().run()
+      if (color) {
+        chain.setColor(color).run()
+        pushRecentColor(color)
+      } else {
+        chain.unsetColor().run()
+      }
     })
 
-  // Keep the (taller) menu within the viewport.
+  // Current colours of the clicked cell (shown on the split buttons).
+  const cellAttrs = editor.isActive('tableHeader')
+    ? editor.getAttributes('tableHeader')
+    : editor.getAttributes('tableCell')
+  const currentFill: string = cellAttrs.backgroundColor || ''
+  const currentText: string = editor.getAttributes('textStyle').color || '#000000'
+
   const style: React.CSSProperties = {
-    left: Math.min(menu.x, window.innerWidth - 236),
-    top: Math.min(menu.y, Math.max(8, window.innerHeight - 470))
+    left: Math.min(menu.x, Math.max(8, window.innerWidth - 252)),
+    top: Math.min(menu.y, Math.max(8, window.innerHeight - 380))
   }
 
   return (
@@ -146,6 +244,41 @@ export function TableContextMenu({ editor }: { editor: Editor }): JSX.Element | 
       onMouseDown={(e) => e.stopPropagation()}
       onContextMenu={(e) => e.preventDefault()}
     >
+      {/* PowerPoint-style colour toolbar */}
+      <div className="ctx-toolbar">
+        <button
+          type="button"
+          className={`ctx-tool ${palette === 'fill' ? 'open' : ''}`}
+          onClick={() => setPalette((p) => (p === 'fill' ? null : 'fill'))}
+        >
+          <span className="ctx-tool-ico">
+            <Bucket />
+            <span
+              className="ctx-tool-bar"
+              style={currentFill ? { background: currentFill } : { background: 'transparent' }}
+            />
+          </span>
+          <span className="ctx-tool-label">
+            {t('fill')} <Caret />
+          </span>
+        </button>
+        <button
+          type="button"
+          className={`ctx-tool ${palette === 'text' ? 'open' : ''}`}
+          onClick={() => setPalette((p) => (p === 'text' ? null : 'text'))}
+        >
+          <span className="ctx-tool-ico">
+            <span className="ctx-tool-A">A</span>
+            <span className="ctx-tool-bar" style={{ background: currentText }} />
+          </span>
+          <span className="ctx-tool-label">
+            {t('fontColor')} <Caret />
+          </span>
+        </button>
+      </div>
+
+      <div className="ctx-divider" />
+
       <button className="ctx-action" onClick={() => run(() => editor.chain().focus().addRowBefore().run())}>
         <span className="ctx-ico"><RowAbove /></span>{t('addRowBefore')}
       </button>
@@ -168,43 +301,22 @@ export function TableContextMenu({ editor }: { editor: Editor }): JSX.Element | 
         <span className="ctx-ico"><DelCol /></span>{t('deleteCol')}
       </button>
 
-      <div className="ctx-divider" />
-
-      <div className="ctx-section"><span className="ctx-ico"><Bucket /></span>{t('cellBackground')}</div>
-      <div className="ctx-grid">
-        {PRESET_COLORS.map((c) => (
-          <button
-            key={c}
-            type="button"
-            className="color-swatch"
-            style={{ background: c }}
-            title={c}
-            onClick={() => setCellBg(c)}
-          />
-        ))}
-      </div>
-      <button type="button" className="ctx-action subtle" onClick={() => setCellBg(null)}>
-        <span className="ctx-ico"><NoFill /></span>{t('noFill')}
-      </button>
-
-      <div className="ctx-divider" />
-
-      <div className="ctx-section"><span className="ctx-ico ctx-ico-A">A</span>{t('textColor')}</div>
-      <div className="ctx-grid">
-        {PRESET_COLORS.map((c) => (
-          <button
-            key={c}
-            type="button"
-            className="color-swatch"
-            style={{ background: c }}
-            title={c}
-            onClick={() => setTextColor(c)}
-          />
-        ))}
-      </div>
-      <button type="button" className="ctx-action subtle" onClick={() => setTextColor(null)}>
-        <span className="ctx-ico"><NoFill /></span>{t('removeColor')}
-      </button>
+      {palette === 'fill' && (
+        <ColorPalette
+          noneLabel={t('noFill')}
+          noneIcon={<NoFill />}
+          onPick={(c) => applyFill(c)}
+          onNone={() => applyFill(null)}
+        />
+      )}
+      {palette === 'text' && (
+        <ColorPalette
+          noneLabel={t('removeColor')}
+          noneIcon={<NoFill />}
+          onPick={(c) => applyText(c)}
+          onNone={() => applyText(null)}
+        />
+      )}
     </div>
   )
 }
