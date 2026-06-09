@@ -7,17 +7,29 @@ import { HIGHLIGHT_CSS } from './highlightCss'
 import { escapeHtml } from './template'
 
 /**
- * Build a Word-compatible document (.doc). Uses the classic "Word HTML" format:
- * an HTML file with the MS Office namespaces that Word/Google Docs open as a
- * native document. The content is laid out linearly (no flex sidebar, which
- * Word can't render); headings keep the document structured/navigable.
+ * Give every table colgroup equal percentage column widths summing to 100%.
+ * Combined with `table-layout: fixed; width: 100%` this forces Word to fit the
+ * table to the page width (instead of auto-sizing to content and overflowing).
+ */
+function fitTableColumns(html: string): string {
+  return html.replace(/<colgroup>([\s\S]*?)<\/colgroup>/g, (_m, inner) => {
+    const n = (inner.match(/<col\b/g) || []).length || 1
+    const pct = (100 / n).toFixed(4)
+    const cols = Array.from({ length: n }, () => `<col style="width:${pct}%" />`).join('')
+    return `<colgroup>${cols}</colgroup>`
+  })
+}
+
+/**
+ * Build a Word-compatible document (.doc) using the classic "Word HTML" format.
+ * Orientation/margins are set via the MS Office `@page Section1` mechanism
+ * (which Word actually honors), and tables are fit to the page width with
+ * equal columns derived from each table's actual column count (any number).
  */
 export function exportWord(docFile: DocFile): string {
-  // Strip the resizable-table colgroup so fixed column widths don't push the
-  // table wider than the Word page; fixed layout below then fits it to the page.
-  const body = inlineColors(
-    highlightCodeBlocks(generateHTML(docFile.tiptapDoc, buildExtensions({ forExport: true })))
-  ).replace(/<colgroup>[\s\S]*?<\/colgroup>/g, '')
+  const body = fitTableColumns(
+    inlineColors(highlightCodeBlocks(generateHTML(docFile.tiptapDoc, buildExtensions({ forExport: true }))))
+  )
   const title = escapeHtml(docFile.title || docFile.theme.titleText)
   const theme = docFile.theme
 
@@ -26,17 +38,23 @@ export function exportWord(docFile: DocFile): string {
 <head>
 <meta charset="utf-8" />
 <title>${title}</title>
-<!--[if gte mso 9]><xml><w:WordDocument><w:View>Print</w:View></w:WordDocument></xml><![endif]-->
+<!--[if gte mso 9]><xml><w:WordDocument><w:View>Print</w:View><w:DoNotOptimizeForBrowser/></w:WordDocument></xml><![endif]-->
 <style>
-@page { size: A4 landscape; margin: 1.5cm; }
+/* A4 portrait with narrow margins — honored by Word via mso-page-orientation. */
+@page Section1 {
+  size: 595.3pt 841.9pt;
+  mso-page-orientation: portrait;
+  margin: 1.0cm 1.0cm 1.0cm 1.0cm;
+}
+div.Section1 { page: Section1; }
 body { font-family: ${theme.bodyFont}; font-size: ${theme.bodyFontSize}; color: ${theme.bodyTextColor}; }
 h1, h2, h3 { color: ${theme.headingColor}; font-family: ${theme.bodyFont}; }
 h1 { font-size: 22pt; border-bottom: 1px solid ${theme.tableBorderColor}; padding-bottom: 4px; }
 h2 { font-size: 16pt; }
 h3 { font-size: 13pt; }
 a { color: ${theme.linkColor}; }
-table { border-collapse: collapse; width: 100%; table-layout: fixed; }
-th, td { border: 1px solid ${theme.tableBorderColor}; padding: 5px 9px; vertical-align: top; word-wrap: break-word; overflow-wrap: break-word; }
+table { border-collapse: collapse; width: 100%; table-layout: fixed; font-size: 10pt; }
+th, td { border: 1px solid ${theme.tableBorderColor}; padding: 4px 7px; vertical-align: top; word-wrap: break-word; overflow-wrap: break-word; }
 th { background: ${theme.tableHeaderBackground}; }
 pre { background: ${theme.codeBlockBackground}; border: 1px solid ${theme.tableBorderColor}; padding: 10px; font-family: Consolas, monospace; font-size: 10pt; white-space: pre-wrap; }
 code { font-family: Consolas, monospace; }
@@ -45,8 +63,10 @@ ${HIGHLIGHT_CSS}
 </style>
 </head>
 <body>
+<div class="Section1">
 <h1>${title}</h1>
 ${body}
+</div>
 </body>
 </html>
 `
