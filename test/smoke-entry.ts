@@ -52,6 +52,8 @@ assert(html.startsWith('<!doctype html>'), 'has doctype')
 assert(html.includes('<header class="doc-topbar">RMS Interface Doc</header>'), 'top bar shows title')
 assert(html.includes('class="doc-sidebar"'), 'has left sidebar')
 assert(html.includes('class="doc-content"'), 'has center content')
+assert(html.includes('id="doc-breadcrumb"'), 'has breadcrumb element')
+assert(html.includes("querySelector('.doc-content')"), 'has breadcrumb scroll script')
 
 console.log('== sidebar TOC links ==')
 assert(html.includes('href="#change-station-status"'), 'TOC links to H1 anchor')
