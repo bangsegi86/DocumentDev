@@ -60,5 +60,5 @@ export const en: Record<keyof typeof ko, string> = {
   rows: 'Rows',
   cols: 'Cols',
   insert: 'Insert',
-  bodyContentPlaceholder: 'Write your document here. Use the toolbar above to insert headings, tables and code blocks.'
+  bodyContentPlaceholder: "Write your document here. Type '/' to open the quick-insert menu."
 }

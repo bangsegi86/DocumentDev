@@ -9,6 +9,7 @@ import Link from '@tiptap/extension-link'
 import Placeholder from '@tiptap/extension-placeholder'
 import type { Extensions } from '@tiptap/core'
 import { HeadingWithId } from './HeadingWithId'
+import { SlashMenu } from './SlashMenu'
 import { lowlight } from '../../lib/lowlight'
 
 interface BuildOptions {
@@ -42,7 +43,8 @@ export function buildExtensions(options: BuildOptions = {}): Extensions {
     extensions.push(
       Placeholder.configure({
         placeholder: options.placeholder ?? ''
-      })
+      }),
+      SlashMenu
     )
   }
 
