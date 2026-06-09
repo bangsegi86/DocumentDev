@@ -1,4 +1,5 @@
 import { exportHtml } from '../src/renderer/export/exportHtml'
+import { exportWord } from '../src/renderer/export/exportWord'
 import { extractPayload } from '../src/shared/fileFormat'
 import { deriveToc } from '../src/renderer/toc/toc'
 import { defaultTheme } from '../src/renderer/theme/defaultTheme'
@@ -79,8 +80,43 @@ const reopenedToc = deriveToc(parsed!.tiptapDoc)
 assert(reopenedToc.length === 3, `re-opened doc yields ${reopenedToc.length} headings`)
 assert(reopenedToc[0].id === 'change-station-status', 're-opened TOC keeps anchor ids')
 
+console.log('== text color + cell background + Word export ==')
+const styledDoc = {
+  type: 'doc',
+  content: [
+    {
+      type: 'paragraph',
+      content: [{ type: 'text', marks: [{ type: 'textStyle', attrs: { color: '#ff0000' } }], text: 'red' }]
+    },
+    {
+      type: 'table',
+      content: [
+        {
+          type: 'tableRow',
+          content: [
+            {
+              type: 'tableCell',
+              attrs: { backgroundColor: '#ffff00' },
+              content: [{ type: 'paragraph', content: [{ type: 'text', text: 'cell' }] }]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
+const styledFile: DocFile = { version: 1, title: 'X', lang: 'ko', theme: defaultTheme, tiptapDoc: styledDoc }
+const styledHtml = exportHtml(styledFile)
+assert(/color:\s*#ff0000/i.test(styledHtml), 'text color renders in HTML export')
+assert(/background-color:\s*#ffff00/i.test(styledHtml), 'cell background renders in HTML export')
+const word = exportWord(styledFile)
+assert(word.includes('urn:schemas-microsoft-com:office:word'), 'Word export has MS Office namespace')
+assert(/background-color:\s*#ffff00/i.test(word), 'cell background renders in Word export')
+assert(/color:\s*#ff0000/i.test(word), 'text color renders in Word export')
+
 import { writeFileSync } from 'node:fs'
 writeFileSync('out/sample.html', html, 'utf-8')
+writeFileSync('out/sample.doc', word, 'utf-8')
 console.log('\nwrote out/sample.html (' + html.length + ' bytes)')
 
 console.log('\nALL SMOKE TESTS PASSED')

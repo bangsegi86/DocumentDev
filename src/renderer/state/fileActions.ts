@@ -5,6 +5,7 @@ import { FILE_EXTENSION } from '@shared/constants'
 import { useDocumentStore } from './documentStore'
 import { defaultTheme } from '../theme/defaultTheme'
 import { exportHtml } from '../export/exportHtml'
+import { exportWord } from '../export/exportWord'
 import { ko } from '../i18n/ko'
 import { en } from '../i18n/en'
 
@@ -20,10 +21,13 @@ function currentDocFile(editor: Editor): DocFile {
   return { version: 1, title, lang, theme, tiptapDoc: editor.getJSON() }
 }
 
-function suggestedFileName(): string {
+function safeBaseName(): string {
   const { title } = useDocumentStore.getState()
-  const safe = (title || 'document').replace(/[\\/:*?"<>|]+/g, '_').trim() || 'document'
-  return `${safe}.${FILE_EXTENSION}`
+  return (title || 'document').replace(/[\\/:*?"<>|]+/g, '_').trim() || 'document'
+}
+
+function suggestedFileName(): string {
+  return `${safeBaseName()}.${FILE_EXTENSION}`
 }
 
 export function newDocument(editor: Editor): void {
@@ -77,4 +81,9 @@ export async function saveDocumentAs(editor: Editor): Promise<void> {
     useDocumentStore.getState().setFilePath(res.path)
     useDocumentStore.getState().markClean()
   }
+}
+
+export async function exportWordDocument(editor: Editor): Promise<void> {
+  const doc = exportWord(currentDocFile(editor))
+  await window.api.saveWord(`${safeBaseName()}.doc`, doc)
 }

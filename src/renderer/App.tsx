@@ -8,7 +8,14 @@ import { ThemePanel } from './theme/ThemePanel'
 import { themeToStyle } from './theme/themeToCss'
 import { I18nProvider, useI18n } from './i18n/I18nContext'
 import { useDocumentStore } from './state/documentStore'
-import { newDocument, openDocument, saveDocument, saveDocumentAs } from './state/fileActions'
+import { TableContextMenu } from './editor/menus/TableContextMenu'
+import {
+  newDocument,
+  openDocument,
+  saveDocument,
+  saveDocumentAs,
+  exportWordDocument
+} from './state/fileActions'
 import type { MenuAction } from '@shared/types'
 
 function AppHeader({
@@ -16,12 +23,14 @@ function AppHeader({
   onOpen,
   onSave,
   onSaveAs,
+  onExportWord,
   onToggleLang
 }: {
   onNew: () => void
   onOpen: () => void
   onSave: () => void
   onSaveAs: () => void
+  onExportWord: () => void
   onToggleLang: () => void
 }): JSX.Element {
   const { t, lang } = useI18n()
@@ -33,6 +42,7 @@ function AppHeader({
       <button onClick={onOpen}>{t('open')}</button>
       <button onClick={onSave}>{t('save')}{dirty ? ' •' : ''}</button>
       <button onClick={onSaveAs}>{t('saveAs')}</button>
+      <button onClick={onExportWord}>{t('exportWord')}</button>
       <span className="app-header-spacer" />
       <button className="lang-toggle" onClick={onToggleLang} title={t('language')}>
         {lang === 'ko' ? '한국어 / EN' : 'EN / 한국어'}
@@ -95,6 +105,7 @@ function Workbench(): JSX.Element {
       open: () => void openDocument(editor),
       save: () => void saveDocument(editor),
       saveAs: () => void saveDocumentAs(editor),
+      exportWord: () => void exportWordDocument(editor),
       toggleLang,
       toggleTheme: () => {}
     }
@@ -112,6 +123,7 @@ function Workbench(): JSX.Element {
         onOpen={() => void openDocument(editor)}
         onSave={() => void saveDocument(editor)}
         onSaveAs={() => void saveDocumentAs(editor)}
+        onExportWord={() => void exportWordDocument(editor)}
         onToggleLang={toggleLang}
       />
       <Toolbar
@@ -119,6 +131,7 @@ function Workbench(): JSX.Element {
         spellcheck={spellcheck}
         onToggleSpellcheck={() => setSpellcheck((v) => !v)}
       />
+      <TableContextMenu editor={editor} />
       <div className="app-body">
         <div className="doc-root" style={themeToStyle(theme)}>
           <header className="doc-topbar">

@@ -5,6 +5,7 @@ import { buildExtensions } from '../editor/extensions'
 import { themeToCss } from '../theme/themeToCss'
 import { deriveToc } from '../toc/toc'
 import { highlightCodeBlocks } from '../lib/highlighter'
+import { inlineColors } from './inlineColors'
 import { encodePayload } from '@shared/fileFormat'
 import { renderDocumentHtml, escapeHtml } from './template'
 
@@ -31,7 +32,9 @@ export function exportHtml(docFile: DocFile): string {
   const doc = docFile.tiptapDoc
   // Same extension list as the editor so headings, code highlighting and tables
   // serialize identically (round-trip safety).
-  const bodyHtml = highlightCodeBlocks(generateHTML(doc, buildExtensions({ forExport: true })))
+  const bodyHtml = inlineColors(
+    highlightCodeBlocks(generateHTML(doc, buildExtensions({ forExport: true })))
+  )
   const tocHtml = buildTocHtml(doc)
   const themeCss = themeToCss(docFile.theme, '.doc-root')
   const payloadJson = encodePayload(docFile)

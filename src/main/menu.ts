@@ -10,6 +10,7 @@ const STRINGS: Record<Lang, Labels> = {
     open: '열기…',
     save: '저장',
     saveAs: '다른 이름으로 저장…',
+    exportWord: '워드로 내려받기…',
     quit: '종료',
     view: '보기',
     toggleLang: '언어 전환 (한/영)',
@@ -29,6 +30,7 @@ const STRINGS: Record<Lang, Labels> = {
     open: 'Open…',
     save: 'Save',
     saveAs: 'Save As…',
+    exportWord: 'Download as Word…',
     quit: 'Quit',
     view: 'View',
     toggleLang: 'Toggle Language (KO/EN)',
@@ -62,6 +64,8 @@ export function buildMenu(lang: Lang): void {
         { type: 'separator' },
         { label: t.save, accelerator: 'CmdOrCtrl+S', click: () => send('save') },
         { label: t.saveAs, accelerator: 'CmdOrCtrl+Shift+S', click: () => send('saveAs') },
+        { type: 'separator' },
+        { label: t.exportWord, accelerator: 'CmdOrCtrl+Shift+W', click: () => send('exportWord') },
         { type: 'separator' },
         isMac ? { role: 'close' } : { label: t.quit, role: 'quit' }
       ]

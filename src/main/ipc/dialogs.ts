@@ -36,3 +36,18 @@ export async function saveFileAsDialog(
   await writeFile(filePath, contents, 'utf-8')
   return { canceled: false, path: filePath }
 }
+
+export async function saveWordDialog(
+  win: BrowserWindow,
+  suggestedName: string,
+  contents: string
+): Promise<SaveResult> {
+  const { canceled, filePath } = await dialog.showSaveDialog(win, {
+    title: 'Download as Word',
+    defaultPath: suggestedName,
+    filters: [{ name: 'Word Document', extensions: ['doc'] }]
+  })
+  if (canceled || !filePath) return { canceled: true }
+  await writeFile(filePath, contents, 'utf-8')
+  return { canceled: false, path: filePath }
+}

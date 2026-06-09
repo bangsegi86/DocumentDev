@@ -1,8 +1,9 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import type { Editor } from '@tiptap/react'
 import { useI18n } from '../../i18n/I18nContext'
 import { CODE_LANGUAGES } from '../../lib/languages'
 import { TableGridPicker } from './TableGridPicker'
+import { PRESET_COLORS } from '../../theme/ColorField'
 import {
   InsertRowAbove,
   InsertRowBelow,
@@ -39,6 +40,70 @@ function Btn({ onClick, active, disabled, title, children }: BtnProps): JSX.Elem
 
 function Sep(): JSX.Element {
   return <span className="tb-sep" />
+}
+
+/** "A" button with a color palette popover for setting selected text color. */
+function TextColorControl({ editor }: { editor: Editor }): JSX.Element {
+  const { t } = useI18n()
+  const [open, setOpen] = useState(false)
+  const ref = useRef<HTMLDivElement>(null)
+  const current = (editor.getAttributes('textStyle').color as string) || '#1f2937'
+
+  useEffect(() => {
+    if (!open) return
+    const onDoc = (e: MouseEvent): void => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false)
+    }
+    document.addEventListener('mousedown', onDoc)
+    return () => document.removeEventListener('mousedown', onDoc)
+  }, [open])
+
+  return (
+    <div className="tb-popover-host" ref={ref}>
+      <button
+        type="button"
+        className="tb-btn tb-color-btn"
+        title={t('textColor')}
+        onMouseDown={(e) => e.preventDefault()}
+        onClick={() => setOpen((o) => !o)}
+      >
+        <span className="tb-color-A" style={{ borderBottomColor: current }}>
+          A
+        </span>
+      </button>
+      {open && (
+        <div className="color-palette tb-color-palette">
+          <div className="color-grid">
+            {PRESET_COLORS.map((c) => (
+              <button
+                type="button"
+                key={c}
+                className="color-swatch"
+                style={{ background: c }}
+                title={c}
+                onMouseDown={(e) => e.preventDefault()}
+                onClick={() => {
+                  editor.chain().focus().setColor(c).run()
+                  setOpen(false)
+                }}
+              />
+            ))}
+          </div>
+          <button
+            type="button"
+            className="tb-color-remove"
+            onMouseDown={(e) => e.preventDefault()}
+            onClick={() => {
+              editor.chain().focus().unsetColor().run()
+              setOpen(false)
+            }}
+          >
+            {t('removeColor')}
+          </button>
+        </div>
+      )}
+    </div>
+  )
 }
 
 export function Toolbar({
@@ -87,6 +152,7 @@ export function Toolbar({
       <Btn onClick={() => editor.chain().focus().toggleItalic().run()} active={editor.isActive('italic')} title={t('italic')}><i>I</i></Btn>
       <Btn onClick={() => editor.chain().focus().toggleStrike().run()} active={editor.isActive('strike')} title={t('strike')}><s>S</s></Btn>
       <Btn onClick={() => editor.chain().focus().toggleCode().run()} active={editor.isActive('code')} title={t('inlineCode')}>{'</>'}</Btn>
+      <TextColorControl editor={editor} />
       <Sep />
 
       <Btn onClick={() => editor.chain().focus().toggleBulletList().run()} active={editor.isActive('bulletList')} title={t('bulletList')}>•</Btn>

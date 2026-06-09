@@ -48,6 +48,11 @@ export const ko = {
   resetTheme: '기본값으로 초기화',
   customColor: '사용자 지정',
   spellcheck: '맞춤법 검사',
+  textColor: '글자 색상',
+  cellBackground: '셀 배경색',
+  noFill: '채우기 없음',
+  removeColor: '색 제거',
+  exportWord: '워드로 내려받기',
   // file actions
   newDoc: '새 문서',
   open: '열기',

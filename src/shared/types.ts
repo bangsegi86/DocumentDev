@@ -46,18 +46,27 @@ export const IPC = {
   fileOpen: 'file:open',
   fileSave: 'file:save',
   fileSaveAs: 'file:saveAs',
+  fileSaveWord: 'file:saveWord',
   menuAction: 'menu:action',
   setMenuLang: 'menu:setLang'
 } as const
 
 /** Actions the native menu can dispatch into the renderer. */
-export type MenuAction = 'new' | 'open' | 'save' | 'saveAs' | 'toggleTheme' | 'toggleLang'
+export type MenuAction =
+  | 'new'
+  | 'open'
+  | 'save'
+  | 'saveAs'
+  | 'exportWord'
+  | 'toggleTheme'
+  | 'toggleLang'
 
 /** API surface exposed to the renderer via the preload contextBridge. */
 export interface DocApi {
   openFile(): Promise<OpenResult>
   saveFile(path: string, contents: string): Promise<SaveResult>
   saveFileAs(suggestedName: string, contents: string): Promise<SaveResult>
+  saveWord(suggestedName: string, contents: string): Promise<SaveResult>
   setMenuLang(lang: Lang): void
   onMenuAction(handler: (action: MenuAction) => void): () => void
 }

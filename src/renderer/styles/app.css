@@ -306,6 +306,77 @@ body {
   cursor: pointer;
 }
 
+/* ---- Text color button ---- */
+.tb-color-A {
+  display: inline-block;
+  font-weight: 700;
+  line-height: 1;
+  border-bottom: 3px solid #1f2937;
+  padding-bottom: 1px;
+}
+.tb-color-palette {
+  position: absolute;
+  top: 34px;
+  left: 0;
+  z-index: 50;
+  width: 200px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.16);
+}
+.tb-color-remove {
+  margin-top: 8px;
+  width: 100%;
+  border: 1px solid #d1d5db;
+  background: #fff;
+  border-radius: 5px;
+  padding: 6px;
+  font-size: 12px;
+  cursor: pointer;
+}
+.tb-color-remove:hover {
+  background: #f3f4f6;
+}
+
+/* ---- Table right-click context menu ---- */
+.ctx-menu {
+  position: fixed;
+  z-index: 200;
+  width: 214px;
+  background: #fff;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.2);
+  padding: 10px;
+}
+.ctx-section {
+  font-size: 12px;
+  font-weight: 600;
+  color: #6b7280;
+  margin: 2px 0 6px;
+}
+.ctx-grid {
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+  gap: 4px;
+}
+.ctx-item {
+  margin-top: 6px;
+  width: 100%;
+  border: 1px solid #d1d5db;
+  background: #fff;
+  border-radius: 5px;
+  padding: 5px;
+  font-size: 12px;
+  cursor: pointer;
+}
+.ctx-item:hover {
+  background: #f3f4f6;
+}
+.ctx-divider {
+  height: 1px;
+  background: #e5e7eb;
+  margin: 10px 0;
+}
+
 /* ---- Slash quick-insert menu ---- */
 .slash-menu {
   display: flex;

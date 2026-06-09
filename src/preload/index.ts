@@ -6,6 +6,8 @@ const api: DocApi = {
   saveFile: (path, contents) => ipcRenderer.invoke(IPC.fileSave, path, contents),
   saveFileAs: (suggestedName, contents) =>
     ipcRenderer.invoke(IPC.fileSaveAs, suggestedName, contents),
+  saveWord: (suggestedName, contents) =>
+    ipcRenderer.invoke(IPC.fileSaveWord, suggestedName, contents),
   setMenuLang: (lang: Lang) => ipcRenderer.send(IPC.setMenuLang, lang),
   onMenuAction: (handler) => {
     const listener = (_e: unknown, action: MenuAction): void => handler(action)
