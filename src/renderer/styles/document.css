@@ -86,8 +86,14 @@
   display: inline-flex;
 }
 
-/* Hamburger toggle now lives at the top of the left contents sidebar. */
+/* Hamburger toggle now lives at the top of the left contents sidebar.
+   Expanded: aligned to the right edge. Collapsed: only element in a narrow
+   strip. Top offset is identical in both states (sidebar padding-top: 8px). */
 .doc-sidebar-toggle {
+  display: block;
+  width: -moz-fit-content;
+  width: fit-content;
+  margin: 0 0 8px auto;
   background: transparent;
   border: none;
   color: inherit;
@@ -96,7 +102,6 @@
   cursor: pointer;
   padding: 4px 8px;
   border-radius: 5px;
-  margin-bottom: 8px;
 }
 .doc-sidebar-toggle:hover {
   background: rgba(0, 0, 0, 0.08);
@@ -178,7 +183,7 @@
   flex: 0 0 260px;
   background: var(--doc-sidebar-bg);
   color: var(--doc-sidebar-fg);
-  padding: 20px 16px;
+  padding: 8px 16px 16px;
   overflow-y: auto;
   border-right: 1px solid var(--doc-table-border);
 }
