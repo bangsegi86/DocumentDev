@@ -39,9 +39,35 @@ export function ThemePanel(): JSX.Element {
   const setTheme = useDocumentStore((s) => s.setTheme)
   const resetTheme = useDocumentStore((s) => s.resetTheme)
 
+  const pickLogo = async (): Promise<void> => {
+    const res = await window.api.openImage()
+    if (!res.canceled && res.dataUri) setTheme({ logoDataUrl: res.dataUri })
+  }
+
   return (
     <aside className="theme-panel">
       <h2>{t('theme')}</h2>
+
+      <div className="theme-row theme-logo-row">
+        <span>{t('topbarLogo')}</span>
+        <div className="theme-logo-controls">
+          {theme.logoDataUrl ? (
+            <>
+              <img className="theme-logo-preview" src={theme.logoDataUrl} alt="logo" />
+              <button type="button" onClick={() => void pickLogo()}>
+                {t('changeLogo')}
+              </button>
+              <button type="button" onClick={() => setTheme({ logoDataUrl: '' })}>
+                {t('removeLogo')}
+              </button>
+            </>
+          ) : (
+            <button type="button" onClick={() => void pickLogo()}>
+              {t('addLogo')}
+            </button>
+          )}
+        </div>
+      </div>
 
       {COLOR_FIELDS.map((key) => (
         <ColorField

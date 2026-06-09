@@ -310,6 +310,30 @@ body {
   background: #fff;
   cursor: pointer;
 }
+.theme-logo-controls {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.theme-logo-preview {
+  width: 28px;
+  height: 28px;
+  object-fit: cover;
+  border: 1px solid #d1d5db;
+  border-radius: 4px;
+  background: #fff;
+}
+.theme-logo-controls button {
+  border: 1px solid #d1d5db;
+  background: #f9fafb;
+  border-radius: 5px;
+  padding: 4px 8px;
+  font-size: 12px;
+  cursor: pointer;
+}
+.theme-logo-controls button:hover {
+  background: #eef1f5;
+}
 .theme-row select {
   flex: 1 1 auto;
   max-width: 150px;

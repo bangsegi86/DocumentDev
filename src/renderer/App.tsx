@@ -52,24 +52,14 @@ const SaveIcon = (): JSX.Element => (
     <path d="M7 3v5h8" />
   </svg>
 )
-const LogoIcon = (): JSX.Element => (
-  <svg {...ICON}>
-    <rect x="3" y="3" width="18" height="18" rx="2" />
-    <circle cx="9" cy="9" r="2" />
-    <path d="m21 15-5-5L5 21" />
-  </svg>
-)
-
 function AppHeader({
   onNew,
   onOpen,
-  onSave,
-  onSetLogo
+  onSave
 }: {
   onNew: () => void
   onOpen: () => void
   onSave: () => void
-  onSetLogo: () => void
 }): JSX.Element {
   const { t } = useI18n()
   const dirty = useDocumentStore((s) => s.dirty)
@@ -91,9 +81,6 @@ function AppHeader({
         <SaveIcon />
       </button>
       <span className="app-header-spacer" />
-      <button className="icon-btn" onClick={onSetLogo} title={t('topbarLogo')} aria-label={t('topbarLogo')}>
-        <LogoIcon />
-      </button>
     </header>
   )
 }
@@ -299,7 +286,6 @@ function Workbench(): JSX.Element {
         onNew={() => newDocument(editor)}
         onOpen={() => void openDocument(editor)}
         onSave={() => void saveDocument(editor)}
-        onSetLogo={() => void pickLogo()}
       />
       <Toolbar
         editor={editor}
