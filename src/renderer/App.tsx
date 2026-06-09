@@ -228,12 +228,14 @@ function Workbench(): JSX.Element {
           <header className="doc-topbar">
             <EditableTitle />
           </header>
-          <Breadcrumb trail={trail} onSelect={scrollToHeading} />
           <div className="doc-layout">
             <TocSidebar items={toc} onSelect={scrollToHeading} />
-            <main className="doc-content" ref={setContentEl}>
-              <EditorContent editor={editor} />
-            </main>
+            <div className="doc-main">
+              <Breadcrumb trail={trail} onSelect={scrollToHeading} />
+              <main className="doc-content" ref={setContentEl}>
+                <EditorContent editor={editor} />
+              </main>
+            </div>
           </div>
         </div>
         <ThemePanel />
