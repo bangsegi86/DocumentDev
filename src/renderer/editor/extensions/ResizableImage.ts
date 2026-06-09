@@ -1,4 +1,5 @@
 import Image from '@tiptap/extension-image'
+import { mergeAttributes } from '@tiptap/core'
 import { ReactNodeViewRenderer } from '@tiptap/react'
 import { Plugin } from '@tiptap/pm/state'
 import { ImageNodeView } from './ImageNodeView'
@@ -32,8 +33,30 @@ export const ResizableImage = Image.extend({
         parseHTML: (el: HTMLElement) => el.getAttribute('data-align'),
         renderHTML: (attrs: { align?: string | null }) =>
           attrs.align ? { 'data-align': attrs.align } : {}
+      },
+      // Visible caption text shown under the image (distinct from `alt`).
+      caption: {
+        default: '',
+        parseHTML: (el: HTMLElement) => el.getAttribute('data-caption') ?? '',
+        renderHTML: (attrs: { caption?: string }) =>
+          attrs.caption ? { 'data-caption': attrs.caption } : {}
       }
     }
+  },
+
+  // With a caption, wrap the image in <figure> + <figcaption>; otherwise emit a
+  // bare <img> (unchanged). Alignment moves onto the figure so the caption
+  // tracks the image width. The editor preview is handled by the NodeView.
+  renderHTML({ node, HTMLAttributes }) {
+    const imgAttrs = mergeAttributes(this.options.HTMLAttributes, HTMLAttributes)
+    const caption = (node.attrs.caption as string) || ''
+    if (!caption) return ['img', imgAttrs]
+
+    const align = node.attrs.align as string | null
+    delete (imgAttrs as Record<string, unknown>)['data-align']
+    const figAttrs: Record<string, unknown> = { class: 'doc-figure' }
+    if (align) figAttrs['data-align'] = align
+    return ['figure', figAttrs, ['img', imgAttrs], ['figcaption', { class: 'doc-figcaption' }, caption]]
   },
 
   addNodeView() {

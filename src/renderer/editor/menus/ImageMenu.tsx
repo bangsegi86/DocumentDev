@@ -61,7 +61,12 @@ export function ImageMenu({ editor }: { editor: Editor }): JSX.Element | null {
 
   if (!pos) return null
 
-  const attrs = editor.getAttributes('image') as { width?: number | null; align?: string | null; alt?: string }
+  const attrs = editor.getAttributes('image') as {
+    width?: number | null
+    align?: string | null
+    alt?: string
+    caption?: string
+  }
   const align = attrs.align ?? null
 
   const setAlign = (value: string): void => {
@@ -77,7 +82,7 @@ export function ImageMenu({ editor }: { editor: Editor }): JSX.Element | null {
 
   const style: React.CSSProperties = {
     top: Math.max(8, pos.top - 46),
-    left: Math.min(pos.left, window.innerWidth - 470)
+    left: Math.min(pos.left, window.innerWidth - 600)
   }
 
   return (
@@ -104,9 +109,19 @@ export function ImageMenu({ editor }: { editor: Editor }): JSX.Element | null {
           className="im-alt"
           type="text"
           placeholder={t('imageAltText')}
+          title={t('imageAltText')}
           value={attrs.alt ?? ''}
           onMouseDown={(e) => e.stopPropagation()}
           onChange={(e) => editor.chain().updateAttributes('image', { alt: e.target.value }).run()}
+        />
+        <input
+          className="im-alt"
+          type="text"
+          placeholder={t('imageCaption')}
+          title={t('imageCaption')}
+          value={attrs.caption ?? ''}
+          onMouseDown={(e) => e.stopPropagation()}
+          onChange={(e) => editor.chain().updateAttributes('image', { caption: e.target.value }).run()}
         />
         <span className="im-sep" />
         <button className="im-btn im-confirm" onClick={deselect}>{t('imageConfirm')}</button>

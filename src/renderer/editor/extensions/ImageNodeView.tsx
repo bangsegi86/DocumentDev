@@ -6,11 +6,12 @@ const HANDLES: Dir[] = ['nw', 'ne', 'sw', 'se']
 
 /** Editor-only image view with drag-to-resize handles. Export uses renderHTML. */
 export function ImageNodeView({ node, updateAttributes, selected }: NodeViewProps): JSX.Element {
-  const { src, alt, width, align } = node.attrs as {
+  const { src, alt, width, align, caption } = node.attrs as {
     src: string
     alt?: string
     width?: number | null
     align?: string | null
+    caption?: string
   }
   const wrapperRef = useRef<HTMLDivElement>(null)
   const boxRef = useRef<HTMLSpanElement>(null)
@@ -57,6 +58,7 @@ export function ImageNodeView({ node, updateAttributes, selected }: NodeViewProp
               onMouseDown={(e) => startResize(e, dir)}
             />
           ))}
+        {caption ? <figcaption className="doc-figcaption">{caption}</figcaption> : null}
       </span>
     </NodeViewWrapper>
   )

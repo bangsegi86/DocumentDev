@@ -156,6 +156,24 @@ const imgReopened = extractPayload(imgHtml)
 assert(imgReopened !== null, 'image doc round-trips')
 const imgNode = imgReopened!.tiptapDoc.content![0]
 assert(imgNode.attrs!.width === 300 && imgNode.attrs!.align === 'center', 'image width/align persist in payload JSON')
+
+// Caption: a captioned image renders <figure>/<figcaption> and round-trips.
+const capDoc = {
+  type: 'doc',
+  content: [
+    {
+      type: 'image',
+      attrs: { src: `data:image/png;base64,${b64}`, align: 'center', alt: 'a', caption: 'Figure 1. Demo' }
+    }
+  ]
+}
+const capHtml = exportHtml({ version: 1, title: 'Cap', lang: 'ko', theme: defaultTheme, tiptapDoc: capDoc })
+assert(/<figure[^>]*class="doc-figure"/.test(capHtml), 'captioned image renders a <figure>')
+assert(capHtml.includes('<figcaption class="doc-figcaption">Figure 1. Demo</figcaption>'), 'caption text rendered')
+assert(/<figure[^>]*data-align="center"/.test(capHtml), 'alignment moves onto the figure')
+assert(extractPayload(capHtml)!.tiptapDoc.content![0].attrs!.caption === 'Figure 1. Demo', 'caption round-trips in payload')
+// An image WITHOUT a caption still renders a bare <img> (no figure).
+assert(!/<figure/.test(imgHtml), 'uncaptioned image stays a bare <img>')
 const imgWord = exportWord(imgFile)
 assert(/<img/.test(imgWord) && imgWord.includes(b64), 'image embedded in Word export')
 assert(/<p align="center"><img/.test(imgWord), 'centered image wrapped for Word')
