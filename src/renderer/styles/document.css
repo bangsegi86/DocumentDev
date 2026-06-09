@@ -317,6 +317,12 @@
   margin: 0.5em 0;
   overflow: hidden;
 }
+/* Editor only: fixed layout so typing in one cell doesn't force the browser to
+   re-measure every cell in the table (a major typing-latency win on large,
+   table-heavy documents). The exported HTML keeps content-based auto layout. */
+.doc-content .ProseMirror table {
+  table-layout: fixed;
+}
 .doc-content th,
 .doc-content td {
   border: 1px solid var(--doc-table-border);
