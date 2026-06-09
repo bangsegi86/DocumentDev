@@ -63,6 +63,8 @@ function Workbench(): JSX.Element {
   const editor = useEditor({
     extensions: buildExtensions({ placeholder: t('bodyContentPlaceholder') }),
     content: '',
+    // Disable the browser's red spellcheck squiggles in the editor body.
+    editorProps: { attributes: { spellcheck: 'false' } },
     onUpdate: () => markDirty()
   })
 
