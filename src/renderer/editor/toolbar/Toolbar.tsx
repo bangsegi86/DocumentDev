@@ -59,29 +59,10 @@ export function Toolbar({ editor }: { editor: Editor }): JSX.Element {
       <Btn onClick={() => editor.chain().focus().redo().run()} title={t('redo')} disabled={!editor.can().redo()}>↷</Btn>
       <Sep />
 
-      <select
-        className="tb-select"
-        value={
-          editor.isActive('heading', { level: 1 })
-            ? 'h1'
-            : editor.isActive('heading', { level: 2 })
-              ? 'h2'
-              : editor.isActive('heading', { level: 3 })
-                ? 'h3'
-                : 'p'
-        }
-        onChange={(e) => {
-          const v = e.target.value
-          const chain = editor.chain().focus()
-          if (v === 'p') chain.setParagraph().run()
-          else chain.toggleHeading({ level: Number(v[1]) as 1 | 2 | 3 }).run()
-        }}
-      >
-        <option value="p">{t('paragraph')}</option>
-        <option value="h1">{t('h1')}</option>
-        <option value="h2">{t('h2')}</option>
-        <option value="h3">{t('h3')}</option>
-      </select>
+      <Btn onClick={() => editor.chain().focus().setParagraph().run()} active={editor.isActive('paragraph')} title={t('paragraph')}>{t('paragraph')}</Btn>
+      <Btn onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()} active={editor.isActive('heading', { level: 1 })} title={t('h1')}>H1</Btn>
+      <Btn onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()} active={editor.isActive('heading', { level: 2 })} title={t('h2')}>H2</Btn>
+      <Btn onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()} active={editor.isActive('heading', { level: 3 })} title={t('h3')}>H3</Btn>
       <Sep />
 
       <Btn onClick={() => editor.chain().focus().toggleBold().run()} active={editor.isActive('bold')} title={t('bold')}><b>B</b></Btn>

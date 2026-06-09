@@ -24,12 +24,16 @@ export const HeadingWithId = Heading.extend({
   },
 
   addProseMirrorPlugins() {
+    const editor = this.editor
     return [
       ...(this.parent?.() ?? []),
       new Plugin({
         key: idPluginKey,
         appendTransaction: (_transactions, oldState, newState) => {
           if (oldState.doc.eq(newState.doc)) return null
+          // Don't dispatch while an IME composition is in progress — modifying
+          // heading nodes mid-composition breaks Korean/CJK input (doubled jamo).
+          if (editor?.view?.composing) return null
 
           const seen = new Map<string, number>()
           const updates: { pos: number; node: PMNode; id: string }[] = []
