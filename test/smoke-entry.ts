@@ -1,5 +1,6 @@
 import { exportHtml } from '../src/renderer/export/exportHtml'
 import { extractPayload } from '../src/shared/fileFormat'
+import { deriveToc } from '../src/renderer/toc/toc'
 import { defaultTheme } from '../src/renderer/theme/defaultTheme'
 import type { DocFile } from '../src/shared/types'
 
@@ -72,6 +73,11 @@ assert(parsed !== null, 'payload extracted from exported file')
 assert(parsed!.title === 'RMS Interface Doc', 'title preserved')
 assert(parsed!.tiptapDoc.content!.length === doc.content.length, 'document body preserved')
 assert(parsed!.theme.topBarColor === defaultTheme.topBarColor, 'theme preserved')
+
+console.log('== TOC rebuilds from re-opened document (sidebar not empty after Open) ==')
+const reopenedToc = deriveToc(parsed!.tiptapDoc)
+assert(reopenedToc.length === 3, `re-opened doc yields ${reopenedToc.length} headings`)
+assert(reopenedToc[0].id === 'change-station-status', 're-opened TOC keeps anchor ids')
 
 import { writeFileSync } from 'node:fs'
 writeFileSync('out/sample.html', html, 'utf-8')
