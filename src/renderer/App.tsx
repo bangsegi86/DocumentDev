@@ -4,6 +4,7 @@ import { buildExtensions } from './editor/extensions'
 import { Toolbar } from './editor/toolbar/Toolbar'
 import { TocSidebar } from './toc/TocSidebar'
 import { useToc } from './toc/useToc'
+import type { TocItem } from './toc/toc'
 import { ThemePanel } from './theme/ThemePanel'
 import { themeToStyle } from './theme/themeToCss'
 import { I18nProvider, useI18n } from './i18n/I18nContext'
@@ -64,6 +65,75 @@ function EditableTitle(): JSX.Element {
   )
 }
 
+/**
+ * Live "you are here" trail (H1 › H2 › H3) for the heading section currently at
+ * the top of the scrolled content area. Recomputes on scroll and when headings
+ * change. Deeper levels reset when a higher-level heading is passed.
+ */
+function useScrollTrail(
+  container: HTMLElement | null,
+  items: TocItem[]
+): TocItem[] {
+  const [trail, setTrail] = useState<TocItem[]>([])
+
+  useEffect(() => {
+    if (!container) return
+    const compute = (): void => {
+      const threshold = container.getBoundingClientRect().top + 90
+      let h1: TocItem | null = null
+      let h2: TocItem | null = null
+      let h3: TocItem | null = null
+      for (const item of items) {
+        const el = document.getElementById(item.id)
+        if (!el) continue
+        if (el.getBoundingClientRect().top <= threshold) {
+          if (item.level === 1) {
+            h1 = item
+            h2 = null
+            h3 = null
+          } else if (item.level === 2) {
+            h2 = item
+            h3 = null
+          } else {
+            h3 = item
+          }
+        } else {
+          break // headings are in document order
+        }
+      }
+      setTrail([h1, h2, h3].filter((x): x is TocItem => x !== null))
+    }
+    compute()
+    container.addEventListener('scroll', compute, { passive: true })
+    return () => container.removeEventListener('scroll', compute)
+  }, [container, items])
+
+  return trail
+}
+
+function Breadcrumb({
+  trail,
+  onSelect
+}: {
+  trail: TocItem[]
+  onSelect: (id: string) => void
+}): JSX.Element {
+  return (
+    <div className="doc-breadcrumb">
+      {trail.length === 0 ? (
+        <span className="crumb-empty" />
+      ) : (
+        trail.map((item, i) => (
+          <span className="crumb" key={item.id}>
+            {i > 0 && <span className="crumb-sep">›</span>}
+            <a onClick={() => onSelect(item.id)}>{item.text}</a>
+          </span>
+        ))
+      )}
+    </div>
+  )
+}
+
 function Workbench(): JSX.Element {
   const { t, lang } = useI18n()
   const theme = useDocumentStore((s) => s.theme)
@@ -86,6 +156,8 @@ function Workbench(): JSX.Element {
   }, [editor, spellcheck])
 
   const toc = useToc(editor)
+  const [contentEl, setContentEl] = useState<HTMLElement | null>(null)
+  const trail = useScrollTrail(contentEl, toc)
 
   const scrollToHeading = (id: string): void => {
     document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
@@ -137,9 +209,10 @@ function Workbench(): JSX.Element {
           <header className="doc-topbar">
             <EditableTitle />
           </header>
+          <Breadcrumb trail={trail} onSelect={scrollToHeading} />
           <div className="doc-layout">
             <TocSidebar items={toc} onSelect={scrollToHeading} />
-            <main className="doc-content">
+            <main className="doc-content" ref={setContentEl}>
               <EditorContent editor={editor} />
             </main>
           </div>
