@@ -223,8 +223,19 @@
   background: var(--doc-link);
   pointer-events: none;
 }
-.doc-content .ProseMirror table .selectedCell {
-  background: rgba(37, 99, 235, 0.12);
+.doc-content .ProseMirror td,
+.doc-content .ProseMirror th {
+  position: relative;
+}
+/* Show the cell selection as an overlay so it stays visible even when the
+   cell has its own background color (inline bg would hide a background hint). */
+.doc-content .ProseMirror .selectedCell::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: rgba(37, 99, 235, 0.3);
+  pointer-events: none;
+  z-index: 2;
 }
 
 /* Placeholder text for the empty editor. */
