@@ -46,6 +46,7 @@ export const en: Record<keyof typeof ko, string> = {
   bodyFontSize: 'Body font size',
   resetTheme: 'Reset to defaults',
   customColor: 'Custom',
+  spellcheck: 'Spellcheck',
   newDoc: 'New',
   open: 'Open',
   save: 'Save',

@@ -3,6 +3,16 @@ import type { Editor } from '@tiptap/react'
 import { useI18n } from '../../i18n/I18nContext'
 import { CODE_LANGUAGES } from '../../lib/languages'
 import { TableGridPicker } from './TableGridPicker'
+import {
+  InsertRowAbove,
+  InsertRowBelow,
+  InsertColLeft,
+  InsertColRight,
+  DeleteRow,
+  DeleteColumn,
+  HeaderRow,
+  DeleteTable
+} from './tableIcons'
 
 interface BtnProps {
   onClick: () => void
@@ -31,7 +41,15 @@ function Sep(): JSX.Element {
   return <span className="tb-sep" />
 }
 
-export function Toolbar({ editor }: { editor: Editor }): JSX.Element {
+export function Toolbar({
+  editor,
+  spellcheck,
+  onToggleSpellcheck
+}: {
+  editor: Editor
+  spellcheck: boolean
+  onToggleSpellcheck: () => void
+}): JSX.Element {
   const { t } = useI18n()
   const [showGrid, setShowGrid] = useState(false)
 
@@ -112,14 +130,19 @@ export function Toolbar({ editor }: { editor: Editor }): JSX.Element {
       {inTable && (
         <>
           <Sep />
-          <Btn onClick={() => editor.chain().focus().addRowAfter().run()} title={t('addRowAfter')}>+R</Btn>
-          <Btn onClick={() => editor.chain().focus().addColumnAfter().run()} title={t('addColAfter')}>+C</Btn>
-          <Btn onClick={() => editor.chain().focus().deleteRow().run()} title={t('deleteRow')}>−R</Btn>
-          <Btn onClick={() => editor.chain().focus().deleteColumn().run()} title={t('deleteCol')}>−C</Btn>
-          <Btn onClick={() => editor.chain().focus().toggleHeaderRow().run()} title={t('toggleHeaderRow')}>⊤</Btn>
-          <Btn onClick={() => editor.chain().focus().deleteTable().run()} title={t('deleteTable')}>✕▦</Btn>
+          <Btn onClick={() => editor.chain().focus().addRowBefore().run()} title={t('addRowBefore')}><InsertRowAbove /></Btn>
+          <Btn onClick={() => editor.chain().focus().addRowAfter().run()} title={t('addRowAfter')}><InsertRowBelow /></Btn>
+          <Btn onClick={() => editor.chain().focus().addColumnBefore().run()} title={t('addColBefore')}><InsertColLeft /></Btn>
+          <Btn onClick={() => editor.chain().focus().addColumnAfter().run()} title={t('addColAfter')}><InsertColRight /></Btn>
+          <Btn onClick={() => editor.chain().focus().deleteRow().run()} title={t('deleteRow')}><DeleteRow /></Btn>
+          <Btn onClick={() => editor.chain().focus().deleteColumn().run()} title={t('deleteCol')}><DeleteColumn /></Btn>
+          <Btn onClick={() => editor.chain().focus().toggleHeaderRow().run()} title={t('toggleHeaderRow')}><HeaderRow /></Btn>
+          <Btn onClick={() => editor.chain().focus().deleteTable().run()} title={t('deleteTable')}><DeleteTable /></Btn>
         </>
       )}
+
+      <span className="tb-spacer" />
+      <Btn onClick={onToggleSpellcheck} active={spellcheck} title={t('spellcheck')}>ABC✓</Btn>
     </div>
   )
 }

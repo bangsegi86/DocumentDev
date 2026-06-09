@@ -47,6 +47,7 @@ export const ko = {
   bodyFontSize: '본문 글자 크기',
   resetTheme: '기본값으로 초기화',
   customColor: '사용자 지정',
+  spellcheck: '맞춤법 검사',
   // file actions
   newDoc: '새 문서',
   open: '열기',

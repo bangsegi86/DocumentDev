@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { EditorContent, useEditor } from '@tiptap/react'
 import { buildExtensions } from './editor/extensions'
 import { Toolbar } from './editor/toolbar/Toolbar'
@@ -60,13 +60,20 @@ function Workbench(): JSX.Element {
   const markDirty = useDocumentStore((s) => s.markDirty)
   const setLang = useDocumentStore((s) => s.setLang)
 
+  const [spellcheck, setSpellcheck] = useState(false)
+
   const editor = useEditor({
     extensions: buildExtensions({ placeholder: t('bodyContentPlaceholder') }),
     content: '',
-    // Disable the browser's red spellcheck squiggles in the editor body.
+    // Spellcheck starts off; the toolbar toggle controls it (see effect below).
     editorProps: { attributes: { spellcheck: 'false' } },
     onUpdate: () => markDirty()
   })
+
+  // Apply the spellcheck toggle to the editable surface.
+  useEffect(() => {
+    if (editor) editor.view.dom.setAttribute('spellcheck', String(spellcheck))
+  }, [editor, spellcheck])
 
   const toc = useToc(editor)
 
@@ -107,7 +114,11 @@ function Workbench(): JSX.Element {
         onSaveAs={() => void saveDocumentAs(editor)}
         onToggleLang={toggleLang}
       />
-      <Toolbar editor={editor} />
+      <Toolbar
+        editor={editor}
+        spellcheck={spellcheck}
+        onToggleSpellcheck={() => setSpellcheck((v) => !v)}
+      />
       <div className="app-body">
         <div className="doc-root" style={themeToStyle(theme)}>
           <header className="doc-topbar">
