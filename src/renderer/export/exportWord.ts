@@ -13,9 +13,11 @@ import { escapeHtml } from './template'
  * Word can't render); headings keep the document structured/navigable.
  */
 export function exportWord(docFile: DocFile): string {
+  // Strip the resizable-table colgroup so fixed column widths don't push the
+  // table wider than the Word page; fixed layout below then fits it to the page.
   const body = inlineColors(
     highlightCodeBlocks(generateHTML(docFile.tiptapDoc, buildExtensions({ forExport: true })))
-  )
+  ).replace(/<colgroup>[\s\S]*?<\/colgroup>/g, '')
   const title = escapeHtml(docFile.title || docFile.theme.titleText)
   const theme = docFile.theme
 
@@ -26,14 +28,15 @@ export function exportWord(docFile: DocFile): string {
 <title>${title}</title>
 <!--[if gte mso 9]><xml><w:WordDocument><w:View>Print</w:View></w:WordDocument></xml><![endif]-->
 <style>
+@page { size: A4 landscape; margin: 1.5cm; }
 body { font-family: ${theme.bodyFont}; font-size: ${theme.bodyFontSize}; color: ${theme.bodyTextColor}; }
 h1, h2, h3 { color: ${theme.headingColor}; font-family: ${theme.bodyFont}; }
 h1 { font-size: 22pt; border-bottom: 1px solid ${theme.tableBorderColor}; padding-bottom: 4px; }
 h2 { font-size: 16pt; }
 h3 { font-size: 13pt; }
 a { color: ${theme.linkColor}; }
-table { border-collapse: collapse; width: 100%; }
-th, td { border: 1px solid ${theme.tableBorderColor}; padding: 5px 9px; vertical-align: top; }
+table { border-collapse: collapse; width: 100%; table-layout: fixed; }
+th, td { border: 1px solid ${theme.tableBorderColor}; padding: 5px 9px; vertical-align: top; word-wrap: break-word; overflow-wrap: break-word; }
 th { background: ${theme.tableHeaderBackground}; }
 pre { background: ${theme.codeBlockBackground}; border: 1px solid ${theme.tableBorderColor}; padding: 10px; font-family: Consolas, monospace; font-size: 10pt; white-space: pre-wrap; }
 code { font-family: Consolas, monospace; }
