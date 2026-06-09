@@ -2,6 +2,14 @@ import { useEffect, useState } from 'react'
 import type { Editor } from '@tiptap/react'
 import { useI18n } from '../../i18n/I18nContext'
 import {
+  InsertRowAbove,
+  InsertRowBelow,
+  InsertColLeft,
+  InsertColRight,
+  DeleteRow,
+  DeleteColumn
+} from '../toolbar/tableIcons'
+import {
   THEME_COLORS,
   THEME_VARIATION_STEPS,
   STANDARD_COLORS,
@@ -26,46 +34,6 @@ const SVG = {
   strokeLinejoin: 'round' as const
 }
 
-const RowAbove = (): JSX.Element => (
-  <svg {...SVG}>
-    <path d="M8 1v3.5M6.2 2.8 8 1l1.8 1.8" />
-    <rect x="2" y="7" width="12" height="7" rx="1" />
-    <path d="M2 10.5h12" />
-  </svg>
-)
-const RowBelow = (): JSX.Element => (
-  <svg {...SVG}>
-    <rect x="2" y="2" width="12" height="7" rx="1" />
-    <path d="M2 5.5h12" />
-    <path d="M8 15v-3.5M6.2 13.2 8 15l1.8-1.8" />
-  </svg>
-)
-const ColLeft = (): JSX.Element => (
-  <svg {...SVG}>
-    <path d="M1 8h3.5M2.8 6.2 1 8l1.8 1.8" />
-    <rect x="7" y="2" width="7" height="12" rx="1" />
-    <path d="M10.5 2v12" />
-  </svg>
-)
-const ColRight = (): JSX.Element => (
-  <svg {...SVG}>
-    <rect x="2" y="2" width="7" height="12" rx="1" />
-    <path d="M5.5 2v12" />
-    <path d="M15 8h-3.5M13.2 6.2 15 8l-1.8 1.8" />
-  </svg>
-)
-const DelRow = (): JSX.Element => (
-  <svg {...SVG}>
-    <rect x="2" y="5" width="12" height="6" rx="1" />
-    <path d="m6 6 4 4M10 6l-4 4" />
-  </svg>
-)
-const DelCol = (): JSX.Element => (
-  <svg {...SVG}>
-    <rect x="5" y="2" width="6" height="12" rx="1" />
-    <path d="m6 6 4 4M10 6l-4 4" />
-  </svg>
-)
 const Bucket = (): JSX.Element => (
   <svg {...SVG}>
     <path d="M3 7 8 2l5 5-5 5z" />
@@ -280,25 +248,25 @@ export function TableContextMenu({ editor }: { editor: Editor }): JSX.Element | 
       <div className="ctx-divider" />
 
       <button className="ctx-action" onClick={() => run(() => editor.chain().focus().addRowBefore().run())}>
-        <span className="ctx-ico"><RowAbove /></span>{t('addRowBefore')}
+        <span className="ctx-ico"><InsertRowAbove /></span>{t('addRowBefore')}
       </button>
       <button className="ctx-action" onClick={() => run(() => editor.chain().focus().addRowAfter().run())}>
-        <span className="ctx-ico"><RowBelow /></span>{t('addRowAfter')}
+        <span className="ctx-ico"><InsertRowBelow /></span>{t('addRowAfter')}
       </button>
       <button className="ctx-action" onClick={() => run(() => editor.chain().focus().addColumnBefore().run())}>
-        <span className="ctx-ico"><ColLeft /></span>{t('addColBefore')}
+        <span className="ctx-ico"><InsertColLeft /></span>{t('addColBefore')}
       </button>
       <button className="ctx-action" onClick={() => run(() => editor.chain().focus().addColumnAfter().run())}>
-        <span className="ctx-ico"><ColRight /></span>{t('addColAfter')}
+        <span className="ctx-ico"><InsertColRight /></span>{t('addColAfter')}
       </button>
 
       <div className="ctx-divider" />
 
-      <button className="ctx-action danger" onClick={() => run(() => editor.chain().focus().deleteRow().run())}>
-        <span className="ctx-ico"><DelRow /></span>{t('deleteRow')}
+      <button className="ctx-action" onClick={() => run(() => editor.chain().focus().deleteRow().run())}>
+        <span className="ctx-ico"><DeleteRow /></span>{t('deleteRow')}
       </button>
-      <button className="ctx-action danger" onClick={() => run(() => editor.chain().focus().deleteColumn().run())}>
-        <span className="ctx-ico"><DelCol /></span>{t('deleteCol')}
+      <button className="ctx-action" onClick={() => run(() => editor.chain().focus().deleteColumn().run())}>
+        <span className="ctx-ico"><DeleteColumn /></span>{t('deleteCol')}
       </button>
 
       {palette === 'fill' && (
