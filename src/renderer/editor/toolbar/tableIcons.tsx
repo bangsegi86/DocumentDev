@@ -138,3 +138,17 @@ export function DeleteTable(p: IconProps): JSX.Element {
     </Svg>
   )
 }
+
+export function AutoFitTable(p: IconProps): JSX.Element {
+  return (
+    <Svg {...p}>
+      <ColFrame />
+      <g stroke={BLUE} strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" fill="none">
+        <line x1="5" y1="10" x2="8" y2="10" />
+        <path d="M6.4 8.6 5 10l1.4 1.4" />
+        <line x1="15" y1="10" x2="12" y2="10" />
+        <path d="M13.6 8.6 15 10l-1.4 1.4" />
+      </g>
+    </Svg>
+  )
+}

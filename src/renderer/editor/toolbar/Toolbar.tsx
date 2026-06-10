@@ -5,6 +5,7 @@ import { CODE_LANGUAGES } from '../../lib/languages'
 import { TableGridPicker } from './TableGridPicker'
 import { PRESET_COLORS } from '../../theme/ColorField'
 import { addNumberColumn } from '../tableNumber'
+import { autoFitTable } from '../tableAutoFit'
 import {
   InsertRowAbove,
   InsertRowBelow,
@@ -13,7 +14,8 @@ import {
   DeleteRow,
   DeleteColumn,
   HeaderRow,
-  DeleteTable
+  DeleteTable,
+  AutoFitTable
 } from './tableIcons'
 
 interface BtnProps {
@@ -270,6 +272,7 @@ export function Toolbar({
       {inTable && (
         <>
           <Sep />
+          <Btn onClick={() => autoFitTable(editor, t('numberColumnHeader'))} title={t('autoFitTable')}><AutoFitTable /></Btn>
           <Btn onClick={() => editor.chain().focus().addRowBefore().run()} title={t('addRowBefore')}><InsertRowAbove /></Btn>
           <Btn onClick={() => editor.chain().focus().addRowAfter().run()} title={t('addRowAfter')}><InsertRowBelow /></Btn>
           <Btn onClick={() => editor.chain().focus().addColumnBefore().run()} title={t('addColBefore')}><InsertColLeft /></Btn>

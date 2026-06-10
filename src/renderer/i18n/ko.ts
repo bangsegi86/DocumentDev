@@ -32,6 +32,7 @@ export const ko = {
   toggleHeaderRow: '머리글 행 토글',
   deleteTable: '표 삭제',
   numberColumn: '맨 앞에 번호 열 추가',
+  autoFitTable: '표 크기 자동 맞춤',
   numberColumnHeader: '번호',
   // panels & layout
   contents: '목차',

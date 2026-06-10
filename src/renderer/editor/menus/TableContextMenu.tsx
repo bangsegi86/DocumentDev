@@ -7,8 +7,10 @@ import {
   InsertColLeft,
   InsertColRight,
   DeleteRow,
-  DeleteColumn
+  DeleteColumn,
+  AutoFitTable
 } from '../toolbar/tableIcons'
+import { autoFitTable } from '../tableAutoFit'
 import {
   THEME_COLORS,
   THEME_VARIATION_STEPS,
@@ -247,6 +249,9 @@ export function TableContextMenu({ editor }: { editor: Editor }): JSX.Element | 
 
       <div className="ctx-divider" />
 
+      <button className="ctx-action" onClick={() => run(() => autoFitTable(editor, t('numberColumnHeader')))}>
+        <span className="ctx-ico"><AutoFitTable /></span>{t('autoFitTable')}
+      </button>
       <button className="ctx-action" onClick={() => run(() => editor.chain().focus().addRowBefore().run())}>
         <span className="ctx-ico"><InsertRowAbove /></span>{t('addRowBefore')}
       </button>
