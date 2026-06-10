@@ -15,8 +15,10 @@
     "test": "node test/run-smoke.mjs",
     "package": "electron-vite build && electron-builder",
     "package:win": "electron-vite build && electron-builder --win",
+    "package:portable": "electron-vite build && electron-builder --win portable",
     "package:mac": "electron-vite build && electron-builder --mac",
-    "package:linux": "electron-vite build && electron-builder --linux"
+    "package:linux": "electron-vite build && electron-builder --linux",
+    "gen:icon": "node scripts/gen-icon.mjs"
   },
   "dependencies": {
     "@tiptap/core": "^2.11.5",

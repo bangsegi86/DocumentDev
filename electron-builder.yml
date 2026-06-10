@@ -7,13 +7,20 @@ files:
   - out/**/*
   - package.json
 win:
-  target: nsis
+  icon: resources/icon.png
+  target:
+    - target: nsis
+    - target: portable
 mac:
+  icon: resources/icon.png
   target: dmg
   category: public.app-category.developer-tools
 linux:
+  icon: resources/icon.png
   target: AppImage
   category: Development
 nsis:
   oneClick: false
   allowToChangeInstallationDirectory: true
+portable:
+  artifactName: ${productName}-${version}-portable.${ext}
