@@ -334,6 +334,38 @@ body {
 .theme-logo-controls button:hover {
   background: #eef1f5;
 }
+.theme-group-label {
+  margin: 12px 0 6px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #9ca3af;
+}
+.theme-heading-controls {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.theme-style-btn {
+  width: 26px;
+  height: 26px;
+  border: 1px solid #d1d5db;
+  background: #fff;
+  border-radius: 5px;
+  font-size: 13px;
+  line-height: 1;
+  cursor: pointer;
+  color: #374151;
+}
+.theme-style-btn:hover {
+  background: #f3f4f6;
+}
+.theme-style-btn.active {
+  background: #dbeafe;
+  border-color: #93c5fd;
+  color: #1d4ed8;
+}
 .theme-row select {
   flex: 1 1 auto;
   max-width: 150px;

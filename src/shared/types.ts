@@ -12,6 +12,16 @@ export interface ThemeSettings {
   sidebarColor: string
   sidebarTextColor: string
   headingColor: string
+  // Per-level heading styles (주제 / 부제 / 소제).
+  h1Color: string
+  h1Bold: boolean
+  h1Italic: boolean
+  h2Color: string
+  h2Bold: boolean
+  h2Italic: boolean
+  h3Color: string
+  h3Bold: boolean
+  h3Italic: boolean
   linkColor: string
   tableBorderColor: string
   tableHeaderBackground: string

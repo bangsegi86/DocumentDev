@@ -9,6 +9,15 @@ export function themeToStyle(theme: ThemeSettings): CSSProperties {
     '--doc-sidebar-bg': theme.sidebarColor,
     '--doc-sidebar-fg': theme.sidebarTextColor,
     '--doc-heading': theme.headingColor,
+    '--doc-h1-color': theme.h1Color,
+    '--doc-h1-weight': theme.h1Bold ? '700' : '400',
+    '--doc-h1-style': theme.h1Italic ? 'italic' : 'normal',
+    '--doc-h2-color': theme.h2Color,
+    '--doc-h2-weight': theme.h2Bold ? '700' : '400',
+    '--doc-h2-style': theme.h2Italic ? 'italic' : 'normal',
+    '--doc-h3-color': theme.h3Color,
+    '--doc-h3-weight': theme.h3Bold ? '700' : '400',
+    '--doc-h3-style': theme.h3Italic ? 'italic' : 'normal',
     '--doc-link': theme.linkColor,
     '--doc-table-border': theme.tableBorderColor,
     '--doc-table-header-bg': theme.tableHeaderBackground,
@@ -34,6 +43,15 @@ export function themeToCss(theme: ThemeSettings, selector = ':root'): string {
   --doc-sidebar-bg: ${theme.sidebarColor};
   --doc-sidebar-fg: ${theme.sidebarTextColor};
   --doc-heading: ${theme.headingColor};
+  --doc-h1-color: ${theme.h1Color};
+  --doc-h1-weight: ${theme.h1Bold ? '700' : '400'};
+  --doc-h1-style: ${theme.h1Italic ? 'italic' : 'normal'};
+  --doc-h2-color: ${theme.h2Color};
+  --doc-h2-weight: ${theme.h2Bold ? '700' : '400'};
+  --doc-h2-style: ${theme.h2Italic ? 'italic' : 'normal'};
+  --doc-h3-color: ${theme.h3Color};
+  --doc-h3-weight: ${theme.h3Bold ? '700' : '400'};
+  --doc-h3-style: ${theme.h3Italic ? 'italic' : 'normal'};
   --doc-link: ${theme.linkColor};
   --doc-table-border: ${theme.tableBorderColor};
   --doc-table-header-bg: ${theme.tableHeaderBackground};

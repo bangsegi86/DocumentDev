@@ -91,6 +91,14 @@ console.log('== self-containment ==')
 assert(!/src="https?:\/\//.test(html) && !/href="https?:\/\/[^"]*\.css/.test(html), 'no external CDN resources')
 assert(html.includes('.doc-topbar') && html.includes('--doc-topbar-bg'), 'layout + theme CSS inlined')
 
+console.log('== per-heading styles (color / bold / italic) ==')
+assert(html.includes('--doc-h1-color:') && html.includes('var(--doc-h1-color)'), 'per-heading style vars inlined and used')
+const headTheme = { ...defaultTheme, h1Color: '#112233', h2Italic: true, h3Bold: false }
+const headWord = exportWord({ version: 1, title: 'H', lang: 'ko', theme: headTheme, tiptapDoc: doc })
+assert(/h1\s*{[^}]*color:\s*#112233/i.test(headWord), 'h1 custom color in Word export')
+assert(/h2\s*{[^}]*font-style:\s*italic/i.test(headWord), 'h2 italic in Word export')
+assert(/h3\s*{[^}]*font-weight:\s*400/i.test(headWord), 'h3 bold-off in Word export')
+
 console.log('== round-trip payload ==')
 const parsed = extractPayload(html)
 assert(parsed !== null, 'payload extracted from exported file')

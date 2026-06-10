@@ -59,10 +59,10 @@ export function exportWord(docFile: DocFile): string {
 }
 div.Section1 { page: Section1; }
 body { font-family: ${theme.bodyFont}; font-size: ${theme.bodyFontSize}; color: ${theme.bodyTextColor}; }
-h1, h2, h3 { color: ${theme.headingColor}; font-family: ${theme.bodyFont}; }
-h1 { font-size: 22pt; border-bottom: 1px solid ${theme.tableBorderColor}; padding-bottom: 4px; }
-h2 { font-size: 16pt; }
-h3 { font-size: 13pt; }
+h1, h2, h3 { font-family: ${theme.bodyFont}; }
+h1 { color: ${theme.h1Color}; font-weight: ${theme.h1Bold ? '700' : '400'}; font-style: ${theme.h1Italic ? 'italic' : 'normal'}; font-size: 22pt; border-bottom: 1px solid ${theme.tableBorderColor}; padding-bottom: 4px; }
+h2 { color: ${theme.h2Color}; font-weight: ${theme.h2Bold ? '700' : '400'}; font-style: ${theme.h2Italic ? 'italic' : 'normal'}; font-size: 16pt; }
+h3 { color: ${theme.h3Color}; font-weight: ${theme.h3Bold ? '700' : '400'}; font-style: ${theme.h3Italic ? 'italic' : 'normal'}; font-size: 13pt; }
 a { color: ${theme.linkColor}; }
 table { border-collapse: collapse; width: 100%; table-layout: fixed; font-size: 10pt; }
 th, td { border: 1px solid ${theme.tableBorderColor}; padding: 4px 7px; vertical-align: top; word-wrap: break-word; overflow-wrap: break-word; }
