@@ -1,9 +1,9 @@
 import type { Editor } from '@tiptap/react'
 import type { Node as PMNode } from '@tiptap/pm/model'
 
-/** Fixed width (px) for the number column — fits a 2-digit value and the
- *  "번호/No." header without wrapping. */
-const NUMBER_COL_WIDTH = 50
+/** Fixed width (px) for the number column — wide enough for the "번호/No."
+ *  header and a 2-digit value to stay on a single line. */
+const NUMBER_COL_WIDTH = 68
 const MIN_COL_WIDTH = 40
 
 /**
