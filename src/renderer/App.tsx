@@ -12,13 +12,19 @@ import { useDocumentStore } from './state/documentStore'
 import { TableContextMenu } from './editor/menus/TableContextMenu'
 import { ImageMenu } from './editor/menus/ImageMenu'
 import { FindReplaceBar } from './editor/menus/FindReplaceBar'
+import { saveDocument, saveDocumentAs, exportWordDocument } from './state/fileActions'
+import { TabBar } from './TabBar'
+import { useTabsStore } from './state/tabsStore'
 import {
-  newDocument,
-  openDocument,
-  saveDocument,
-  saveDocumentAs,
-  exportWordDocument
-} from './state/fileActions'
+  initTabs,
+  newTab,
+  openTab,
+  closeTab,
+  activateTab,
+  autosaveRecovery,
+  anyTabDirty,
+  maybeRestoreRecovery
+} from './state/tabsActions'
 import type { MenuAction } from '@shared/types'
 import { APP_NAME } from '@shared/constants'
 
@@ -207,6 +213,8 @@ function Workbench(): JSX.Element {
   const setLang = useDocumentStore((s) => s.setLang)
   const dirty = useDocumentStore((s) => s.dirty)
   const docTitle = useDocumentStore((s) => s.title)
+  const tabs = useTabsStore((s) => s.tabs)
+  const activeId = useTabsStore((s) => s.activeId)
 
   const [spellcheck, setSpellcheck] = useState(false)
 
@@ -262,13 +270,21 @@ function Workbench(): JSX.Element {
     }
   }
 
+  // Save the active document and drop its crash-recovery snapshot on success.
+  const saveActive = async (): Promise<boolean> => {
+    if (!editor) return false
+    const saved = await saveDocument(editor)
+    if (saved) void window.api.recoveryDelete(useTabsStore.getState().activeId)
+    return saved
+  }
+
   // Wire native menu actions (and keyboard accelerators) to the same handlers.
   useEffect(() => {
     if (!editor) return
     const handlers: Record<MenuAction, () => void> = {
-      new: () => newDocument(editor),
-      open: () => void openDocument(editor),
-      save: () => void saveDocument(editor),
+      new: () => newTab(editor),
+      open: () => void openTab(editor),
+      save: () => void saveActive(),
       saveAs: () => void saveDocumentAs(editor),
       exportWord: () => void exportWordDocument(editor),
       find: () => setShowFind(true),
@@ -281,34 +297,57 @@ function Workbench(): JSX.Element {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [editor, lang])
 
-  // Reflect unsaved state to the OS window title and to the main process
-  // (which guards window close against losing unsaved work).
+  // Seed the first tab, then offer to restore any crash-recovery snapshots.
   useEffect(() => {
-    window.api.setDirty(dirty)
-    document.title = `${dirty ? '• ' : ''}${docTitle || 'Untitled'} — ${APP_NAME}`
-  }, [dirty, docTitle])
+    if (!editor) return
+    initTabs(editor)
+    void maybeRestoreRecovery(editor)
+  }, [editor])
+
+  // Periodic crash-recovery autosave (only does work when something is dirty).
+  useEffect(() => {
+    if (!editor) return
+    const timer = setInterval(() => {
+      if (anyTabDirty()) autosaveRecovery(editor)
+    }, 4000)
+    return () => clearInterval(timer)
+  }, [editor])
+
+  // Reflect unsaved state to the OS window title and to the main process
+  // (which guards window close against losing unsaved work in ANY tab).
+  useEffect(() => {
+    const unsaved = dirty || anyTabDirty()
+    window.api.setDirty(unsaved)
+    document.title = `${unsaved ? '• ' : ''}${docTitle || 'Untitled'} — ${APP_NAME}`
+  }, [dirty, docTitle, tabs, activeId])
 
   // When closing with unsaved changes, the main process asks us to save first.
   useEffect(() => {
     if (!editor) return
     return window.api.onSaveForClose(() => {
-      void saveDocument(editor).then((saved) => window.api.saveForCloseResult(saved))
+      void saveActive().then((saved) => window.api.saveForCloseResult(saved))
     })
-  }, [editor])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [editor, activeId])
 
   if (!editor) return <div className="loading">Loading…</div>
 
   return (
     <div className="app">
       <AppHeader
-        onNew={() => newDocument(editor)}
-        onOpen={() => void openDocument(editor)}
-        onSave={() => void saveDocument(editor)}
+        onNew={() => newTab(editor)}
+        onOpen={() => void openTab(editor)}
+        onSave={() => void saveActive()}
       />
       <Toolbar
         editor={editor}
         themeOpen={themeOpen}
         onToggleTheme={() => setThemeOpen((v) => !v)}
+      />
+      <TabBar
+        onSelect={(id) => activateTab(editor, id)}
+        onClose={(id) => closeTab(editor, id)}
+        onNew={() => newTab(editor)}
       />
       <TableContextMenu editor={editor} />
       <ImageMenu editor={editor} />

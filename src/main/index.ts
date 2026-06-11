@@ -1,11 +1,13 @@
 import { app, BrowserWindow, ipcMain } from 'electron'
 import { createWindow } from './window'
 import { registerFileHandlers } from './ipc/fileHandlers'
+import { registerRecoveryHandlers } from './ipc/recoveryHandlers'
 import { buildMenu } from './menu'
 import { IPC, type Lang } from '../shared/types'
 
 app.whenReady().then(() => {
   registerFileHandlers()
+  registerRecoveryHandlers()
   buildMenu('ko')
 
   // The renderer tells the main process which language to render the native menu in.

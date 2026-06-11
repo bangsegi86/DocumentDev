@@ -2,6 +2,7 @@ import { BrowserWindow, shell, ipcMain, dialog } from 'electron'
 import { join } from 'path'
 import { APP_NAME } from '../shared/constants'
 import { IPC, type Lang } from '../shared/types'
+import { clearRecovery } from './ipc/recoveryHandlers'
 
 // Tracked across the window's lifetime to guard against losing unsaved work.
 let dirty = false
@@ -57,7 +58,8 @@ export function createWindow(): BrowserWindow {
     })
     if (choice === 2) return // Cancel — stay open.
     if (choice === 1) {
-      forceClose = true // Don't Save — discard and close.
+      forceClose = true // Don't Save — discard recovery snapshots and close.
+      void clearRecovery()
       win.destroy()
       return
     }

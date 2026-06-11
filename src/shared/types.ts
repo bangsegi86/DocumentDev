@@ -72,7 +72,12 @@ export const IPC = {
   // Unsaved-changes guard on window close.
   docDirty: 'doc:dirty',
   saveForClose: 'doc:saveForClose',
-  saveForCloseResult: 'doc:saveForCloseResult'
+  saveForCloseResult: 'doc:saveForCloseResult',
+  // Crash-recovery autosave store (in userData).
+  recoveryWrite: 'recovery:write',
+  recoveryDelete: 'recovery:delete',
+  recoveryList: 'recovery:list',
+  recoveryClear: 'recovery:clear'
 } as const
 
 /** Actions the native menu can dispatch into the renderer. */
@@ -101,4 +106,9 @@ export interface DocApi {
   /** Main asks the renderer to save before closing; reply via saveForCloseResult. */
   onSaveForClose(handler: () => void): () => void
   saveForCloseResult(saved: boolean): void
+  /** Crash-recovery autosave: per-tab snapshots persisted in userData. */
+  recoveryWrite(id: string, json: string): Promise<void>
+  recoveryDelete(id: string): Promise<void>
+  recoveryList(): Promise<string[]>
+  recoveryClear(): Promise<void>
 }

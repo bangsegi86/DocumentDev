@@ -100,6 +100,77 @@ body {
   border-bottom: 1px solid #d1d5db;
   flex: 0 0 auto;
 }
+
+/* ---- Document tabs ---- */
+.tab-bar {
+  display: flex;
+  align-items: stretch;
+  gap: 2px;
+  padding: 4px 8px 0;
+  background: #eceef1;
+  border-bottom: 1px solid #d1d5db;
+  flex: 0 0 auto;
+  overflow-x: auto;
+}
+.tab {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  max-width: 220px;
+  padding: 6px 8px 6px 12px;
+  border: 1px solid #d1d5db;
+  border-bottom: none;
+  border-radius: 7px 7px 0 0;
+  background: #dfe2e7;
+  color: #4b5563;
+  font-size: 13px;
+  cursor: pointer;
+  user-select: none;
+  white-space: nowrap;
+}
+.tab:hover {
+  background: #e9ebef;
+}
+.tab.active {
+  background: #ffffff;
+  color: #111827;
+  font-weight: 600;
+}
+.tab-title {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.tab-dot {
+  color: #2563eb;
+  font-size: 16px;
+  line-height: 1;
+}
+.tab-close {
+  border: none;
+  background: transparent;
+  color: #9ca3af;
+  font-size: 15px;
+  line-height: 1;
+  cursor: pointer;
+  border-radius: 4px;
+  padding: 0 3px;
+}
+.tab-close:hover {
+  background: rgba(0, 0, 0, 0.12);
+  color: #374151;
+}
+.tab-new {
+  border: none;
+  background: transparent;
+  color: #6b7280;
+  font-size: 18px;
+  cursor: pointer;
+  padding: 0 10px;
+  border-radius: 6px;
+}
+.tab-new:hover {
+  background: rgba(0, 0, 0, 0.08);
+}
 .tb-btn {
   min-width: 30px;
   height: 30px;

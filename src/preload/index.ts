@@ -21,7 +21,11 @@ const api: DocApi = {
     ipcRenderer.on(IPC.saveForClose, listener)
     return () => ipcRenderer.removeListener(IPC.saveForClose, listener)
   },
-  saveForCloseResult: (saved: boolean) => ipcRenderer.send(IPC.saveForCloseResult, saved)
+  saveForCloseResult: (saved: boolean) => ipcRenderer.send(IPC.saveForCloseResult, saved),
+  recoveryWrite: (id: string, json: string) => ipcRenderer.invoke(IPC.recoveryWrite, id, json),
+  recoveryDelete: (id: string) => ipcRenderer.invoke(IPC.recoveryDelete, id),
+  recoveryList: () => ipcRenderer.invoke(IPC.recoveryList),
+  recoveryClear: () => ipcRenderer.invoke(IPC.recoveryClear)
 }
 
 contextBridge.exposeInMainWorld('api', api)
