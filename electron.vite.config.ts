@@ -29,8 +29,19 @@ export default defineConfig({
     },
     plugins: [react()],
     build: {
+      chunkSizeWarningLimit: 1000,
       rollupOptions: {
-        input: { index: resolve(__dirname, 'src/renderer/index.html') }
+        input: { index: resolve(__dirname, 'src/renderer/index.html') },
+        output: {
+          // Split the heavy vendor libraries out of the app chunk so app code
+          // parses faster and rebuilds stay incremental.
+          manualChunks(id: string): string | undefined {
+            if (!id.includes('node_modules')) return undefined
+            if (id.includes('highlight.js') || id.includes('lowlight')) return 'highlight'
+            if (id.includes('@tiptap') || id.includes('prosemirror')) return 'editor'
+            return 'vendor'
+          }
+        }
       }
     }
   }

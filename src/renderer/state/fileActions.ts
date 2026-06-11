@@ -63,24 +63,31 @@ export async function openDocument(editor: Editor): Promise<void> {
   editor.commands.setContent(payload.tiptapDoc, false)
 }
 
-export async function saveDocument(editor: Editor): Promise<void> {
+/** @returns true if the document was written, false if the user cancelled. */
+export async function saveDocument(editor: Editor): Promise<boolean> {
   const { filePath } = useDocumentStore.getState()
   const html = exportHtml(currentDocFile(editor))
   if (!filePath) {
-    await saveDocumentAs(editor)
-    return
+    return saveDocumentAs(editor)
   }
   const res = await window.api.saveFile(filePath, html)
-  if (!res.canceled) useDocumentStore.getState().markClean()
+  if (!res.canceled) {
+    useDocumentStore.getState().markClean()
+    return true
+  }
+  return false
 }
 
-export async function saveDocumentAs(editor: Editor): Promise<void> {
+/** @returns true if the document was written, false if the user cancelled. */
+export async function saveDocumentAs(editor: Editor): Promise<boolean> {
   const html = exportHtml(currentDocFile(editor))
   const res = await window.api.saveFileAs(suggestedFileName(), html)
   if (!res.canceled && res.path) {
     useDocumentStore.getState().setFilePath(res.path)
     useDocumentStore.getState().markClean()
+    return true
   }
+  return false
 }
 
 export async function exportWordDocument(editor: Editor): Promise<void> {

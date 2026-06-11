@@ -20,6 +20,7 @@ import {
   exportWordDocument
 } from './state/fileActions'
 import type { MenuAction } from '@shared/types'
+import { APP_NAME } from '@shared/constants'
 
 /** Shared SVG props for the 18px line icons used in the header. */
 const ICON = {
@@ -204,6 +205,8 @@ function Workbench(): JSX.Element {
   const theme = useDocumentStore((s) => s.theme)
   const markDirty = useDocumentStore((s) => s.markDirty)
   const setLang = useDocumentStore((s) => s.setLang)
+  const dirty = useDocumentStore((s) => s.dirty)
+  const docTitle = useDocumentStore((s) => s.title)
 
   const [spellcheck, setSpellcheck] = useState(false)
 
@@ -277,6 +280,21 @@ function Workbench(): JSX.Element {
     return off
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [editor, lang])
+
+  // Reflect unsaved state to the OS window title and to the main process
+  // (which guards window close against losing unsaved work).
+  useEffect(() => {
+    window.api.setDirty(dirty)
+    document.title = `${dirty ? '• ' : ''}${docTitle || 'Untitled'} — ${APP_NAME}`
+  }, [dirty, docTitle])
+
+  // When closing with unsaved changes, the main process asks us to save first.
+  useEffect(() => {
+    if (!editor) return
+    return window.api.onSaveForClose(() => {
+      void saveDocument(editor).then((saved) => window.api.saveForCloseResult(saved))
+    })
+  }, [editor])
 
   if (!editor) return <div className="loading">Loading…</div>
 

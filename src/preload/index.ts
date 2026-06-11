@@ -14,7 +14,14 @@ const api: DocApi = {
     const listener = (_e: unknown, action: MenuAction): void => handler(action)
     ipcRenderer.on(IPC.menuAction, listener)
     return () => ipcRenderer.removeListener(IPC.menuAction, listener)
-  }
+  },
+  setDirty: (dirty: boolean) => ipcRenderer.send(IPC.docDirty, dirty),
+  onSaveForClose: (handler) => {
+    const listener = (): void => handler()
+    ipcRenderer.on(IPC.saveForClose, listener)
+    return () => ipcRenderer.removeListener(IPC.saveForClose, listener)
+  },
+  saveForCloseResult: (saved: boolean) => ipcRenderer.send(IPC.saveForCloseResult, saved)
 }
 
 contextBridge.exposeInMainWorld('api', api)

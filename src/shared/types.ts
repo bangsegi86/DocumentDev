@@ -68,7 +68,11 @@ export const IPC = {
   fileSaveWord: 'file:saveWord',
   imageOpen: 'image:open',
   menuAction: 'menu:action',
-  setMenuLang: 'menu:setLang'
+  setMenuLang: 'menu:setLang',
+  // Unsaved-changes guard on window close.
+  docDirty: 'doc:dirty',
+  saveForClose: 'doc:saveForClose',
+  saveForCloseResult: 'doc:saveForCloseResult'
 } as const
 
 /** Actions the native menu can dispatch into the renderer. */
@@ -92,4 +96,9 @@ export interface DocApi {
   openImage(): Promise<ImageResult>
   setMenuLang(lang: Lang): void
   onMenuAction(handler: (action: MenuAction) => void): () => void
+  /** Tell the main process whether the document has unsaved changes. */
+  setDirty(dirty: boolean): void
+  /** Main asks the renderer to save before closing; reply via saveForCloseResult. */
+  onSaveForClose(handler: () => void): () => void
+  saveForCloseResult(saved: boolean): void
 }
