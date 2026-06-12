@@ -21,6 +21,7 @@ interface TabsStore {
   addTab: (rec: TabRecord) => void
   update: (id: string, patch: Partial<TabRecord>) => void
   setActive: (id: string) => void
+  moveTab: (fromId: string, toId: string) => void
 }
 
 export const useTabsStore = create<TabsStore>((set) => ({
@@ -30,5 +31,15 @@ export const useTabsStore = create<TabsStore>((set) => ({
   addTab: (rec) => set((s) => ({ tabs: [...s.tabs, rec], activeId: rec.id })),
   update: (id, patch) =>
     set((s) => ({ tabs: s.tabs.map((t) => (t.id === id ? { ...t, ...patch } : t)) })),
-  setActive: (id) => set({ activeId: id })
+  setActive: (id) => set({ activeId: id }),
+  moveTab: (fromId, toId) =>
+    set((s) => {
+      const from = s.tabs.findIndex((t) => t.id === fromId)
+      const to = s.tabs.findIndex((t) => t.id === toId)
+      if (from < 0 || to < 0 || from === to) return {}
+      const next = [...s.tabs]
+      const [moved] = next.splice(from, 1)
+      next.splice(to, 0, moved)
+      return { tabs: next }
+    })
 }))

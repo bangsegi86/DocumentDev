@@ -1,3 +1,4 @@
+import { useRef, useState } from 'react'
 import { useDocumentStore } from './state/documentStore'
 import { useTabsStore } from './state/tabsStore'
 import { useI18n } from './i18n/I18nContext'
@@ -16,8 +17,11 @@ export function TabBar({
   const { t } = useI18n()
   const tabs = useTabsStore((s) => s.tabs)
   const activeId = useTabsStore((s) => s.activeId)
+  const moveTab = useTabsStore((s) => s.moveTab)
   const liveTitle = useDocumentStore((s) => s.title)
   const liveDirty = useDocumentStore((s) => s.dirty)
+  const dragId = useRef<string | null>(null)
+  const [dropTarget, setDropTarget] = useState<string | null>(null)
 
   // A single tab adds no value — hide the bar until there are at least two.
   if (tabs.length <= 1) return null
@@ -33,8 +37,25 @@ export function TabBar({
             key={tab.id}
             role="tab"
             aria-selected={isActive}
-            className={`tab ${isActive ? 'active' : ''}`}
+            className={`tab ${isActive ? 'active' : ''} ${dropTarget === tab.id ? 'drop-target' : ''}`}
             title={title}
+            draggable
+            onDragStart={() => (dragId.current = tab.id)}
+            onDragOver={(e) => {
+              e.preventDefault()
+              if (dragId.current && dragId.current !== tab.id) setDropTarget(tab.id)
+            }}
+            onDragLeave={() => setDropTarget((d) => (d === tab.id ? null : d))}
+            onDrop={(e) => {
+              e.preventDefault()
+              if (dragId.current && dragId.current !== tab.id) moveTab(dragId.current, tab.id)
+              dragId.current = null
+              setDropTarget(null)
+            }}
+            onDragEnd={() => {
+              dragId.current = null
+              setDropTarget(null)
+            }}
             onMouseDown={(e) => {
               // Middle-click closes; left-click selects.
               if (e.button === 1) {

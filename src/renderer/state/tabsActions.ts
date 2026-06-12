@@ -1,9 +1,11 @@
 import type { Editor } from '@tiptap/react'
 import type { JSONContent } from '@tiptap/core'
-import type { Lang, ThemeSettings } from '@shared/types'
+import type { DocFile, Lang, ThemeSettings } from '@shared/types'
 import { extractPayload } from '@shared/fileFormat'
 import { useDocumentStore } from './documentStore'
 import { useTabsStore, type TabRecord } from './tabsStore'
+import { saveDocumentAs } from './fileActions'
+import { exportHtml } from '../export/exportHtml'
 import { defaultTheme } from '../theme/defaultTheme'
 import { ko } from '../i18n/ko'
 import { en } from '../i18n/en'
@@ -182,6 +184,43 @@ export function anyTabDirty(): boolean {
   if (useDocumentStore.getState().dirty) return true
   const { tabs, activeId } = useTabsStore.getState()
   return tabs.some((t) => t.id !== activeId && t.dirty)
+}
+
+/**
+ * Save every dirty tab. Tabs with a file path are written silently from their
+ * snapshot; unsaved ("Untitled") tabs are activated so the user gets a Save As
+ * dialog. Returns false if the user cancels any save.
+ */
+export async function saveAllTabs(editor: Editor): Promise<boolean> {
+  snapshotActive(editor)
+  const lang = useDocumentStore.getState().lang
+  for (const tab of [...useTabsStore.getState().tabs]) {
+    const activeId = useTabsStore.getState().activeId
+    const isDirty = tab.id === activeId ? useDocumentStore.getState().dirty : tab.dirty
+    if (!isDirty) continue
+
+    if (tab.filePath) {
+      const docFile: DocFile = {
+        version: 1,
+        title: tab.title,
+        lang,
+        theme: tab.theme,
+        tiptapDoc: tab.doc ?? { type: 'doc', content: [{ type: 'paragraph' }] }
+      }
+      const res = await window.api.saveFile(tab.filePath, exportHtml(docFile))
+      if (res.canceled) return false
+      useTabsStore.getState().update(tab.id, { dirty: false })
+      if (tab.id === activeId) useDocumentStore.getState().markClean()
+      void window.api.recoveryDelete(tab.id)
+    } else {
+      activateTab(editor, tab.id)
+      const saved = await saveDocumentAs(editor)
+      if (!saved) return false
+      void window.api.recoveryDelete(tab.id)
+      snapshotActive(editor)
+    }
+  }
+  return true
 }
 
 /** On startup: if recovery snapshots exist, optionally restore them as tabs. */

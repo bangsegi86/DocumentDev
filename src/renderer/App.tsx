@@ -23,6 +23,7 @@ import {
   activateTab,
   autosaveRecovery,
   anyTabDirty,
+  saveAllTabs,
   maybeRestoreRecovery
 } from './state/tabsActions'
 import type { MenuAction } from '@shared/types'
@@ -325,7 +326,7 @@ function Workbench(): JSX.Element {
   useEffect(() => {
     if (!editor) return
     return window.api.onSaveForClose(() => {
-      void saveActive().then((saved) => window.api.saveForCloseResult(saved))
+      void saveAllTabs(editor).then((saved) => window.api.saveForCloseResult(saved))
     })
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [editor, activeId])
