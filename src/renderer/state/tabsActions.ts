@@ -1,9 +1,10 @@
 import type { Editor } from '@tiptap/react'
-import type { JSONContent } from '@tiptap/core'
+import { createDocument, type JSONContent } from '@tiptap/core'
+import { EditorState } from '@tiptap/pm/state'
 import type { DocFile, Lang, ThemeSettings } from '@shared/types'
 import { extractPayload } from '@shared/fileFormat'
 import { useDocumentStore } from './documentStore'
-import { useTabsStore, type TabRecord } from './tabsStore'
+import { useTabsStore, tabDocJSON, type TabRecord } from './tabsStore'
 import { saveDocumentAs } from './fileActions'
 import { exportHtml } from '../export/exportHtml'
 import { defaultTheme } from '../theme/defaultTheme'
@@ -23,11 +24,22 @@ function emptyTab(): TabRecord {
     title: defaultTheme.titleText,
     theme: { ...defaultTheme },
     dirty: false,
-    doc: null
+    doc: null,
+    state: null,
+    scrollTop: 0
   }
 }
 
-/** Copy the live active document (documentStore + editor content) into its tab record. */
+/** Transaction meta flag telling listeners (e.g. the TOC) that the whole
+ *  editor state was swapped for another tab's. */
+export const TAB_SWITCH_META = 'docdevTabSwitch'
+
+function contentPane(): HTMLElement | null {
+  return document.querySelector('.doc-content')
+}
+
+/** Save the live active document (documentStore + the editor's whole state,
+ *  including its undo history) into its tab record. No serialization. */
 export function snapshotActive(editor: Editor): void {
   const ds = useDocumentStore.getState()
   const { activeId } = useTabsStore.getState()
@@ -37,10 +49,24 @@ export function snapshotActive(editor: Editor): void {
     title: ds.title,
     theme: ds.theme,
     dirty: ds.dirty,
-    doc: editor.getJSON()
+    state: editor.state,
+    scrollTop: contentPane()?.scrollTop ?? 0
   })
 }
 
+/** The record's saved editor state, or a fresh one (with an empty undo
+ *  history) built from its initial content. */
+function stateFor(editor: Editor, rec: TabRecord): EditorState {
+  if (rec.state) return rec.state
+  const doc = createDocument(rec.doc ?? '', editor.schema)
+  return EditorState.create({ schema: editor.schema, doc, plugins: editor.state.plugins })
+}
+
+/**
+ * Show a tab in the editor by swapping in its own EditorState. Unlike
+ * setContent this does not create an undoable step, so Ctrl+Z can never pull
+ * another tab's content into this one, and each tab keeps its own history.
+ */
 function loadRecord(editor: Editor, rec: TabRecord): void {
   const lang = useDocumentStore.getState().lang
   useDocumentStore.getState().loadDocument({
@@ -48,10 +74,23 @@ function loadRecord(editor: Editor, rec: TabRecord): void {
     title: rec.title,
     lang,
     theme: rec.theme,
-    doc: rec.doc
+    doc: null
   })
-  editor.commands.setContent(rec.doc ?? '', false)
+  editor.view.updateState(stateFor(editor, rec))
+  // updateState emits no editor events; dispatch an empty, non-undoable
+  // transaction so toolbar / TOC / menus refresh for the new content.
+  editor.view.dispatch(
+    editor.state.tr
+      .setMeta('addToHistory', false)
+      .setMeta('preventUpdate', true)
+      .setMeta(TAB_SWITCH_META, true)
+  )
   if (rec.dirty) useDocumentStore.getState().markDirty()
+  const top = rec.scrollTop
+  requestAnimationFrame(() => {
+    const pane = contentPane()
+    if (pane) pane.scrollTop = top
+  })
 }
 
 /** Seed the very first tab from whatever is currently in documentStore/editor. */
@@ -64,7 +103,9 @@ export function initTabs(editor: Editor): void {
     title: ds.title,
     theme: ds.theme,
     dirty: ds.dirty,
-    doc: editor.getJSON()
+    doc: null,
+    state: editor.state,
+    scrollTop: 0
   }
   useTabsStore.getState().setAll([rec], rec.id)
 }
@@ -102,7 +143,9 @@ export async function openTab(editor: Editor): Promise<void> {
     title: payload.title,
     theme: { ...defaultTheme, ...payload.theme },
     dirty: false,
-    doc: payload.tiptapDoc
+    doc: payload.tiptapDoc,
+    state: null,
+    scrollTop: 0
   }
   if (reuseActive) {
     useTabsStore.getState().update(rec.id, rec)
@@ -191,7 +234,7 @@ export function autosaveRecovery(editor: Editor, idleMs = 1500): void {
     }
     const sig = isActive
       ? { doc: editor.state.doc, theme: ds.theme, title: ds.title }
-      : { doc: t.doc, theme: t.theme, title: t.title }
+      : { doc: t.state?.doc ?? t.doc, theme: t.theme, title: t.title }
     if (prev && prev !== 'clean' && prev.doc === sig.doc && prev.theme === sig.theme && prev.title === sig.title) {
       continue
     }
@@ -201,7 +244,7 @@ export function autosaveRecovery(editor: Editor, idleMs = 1500): void {
       title: sig.title,
       lang: ds.lang,
       theme: sig.theme,
-      tiptapDoc: isActive ? editor.getJSON() : t.doc,
+      tiptapDoc: isActive ? editor.getJSON() : tabDocJSON(t),
       savedAt: Date.now()
     }
     void window.api.recoveryWrite(t.id, JSON.stringify(payload))
@@ -241,7 +284,7 @@ export async function saveAllTabs(editor: Editor): Promise<boolean> {
         title: tab.title,
         lang,
         theme: tab.theme,
-        tiptapDoc: tab.doc ?? { type: 'doc', content: [{ type: 'paragraph' }] }
+        tiptapDoc: tabDocJSON(tab) ?? { type: 'doc', content: [{ type: 'paragraph' }] }
       }
       const res = await window.api.saveFile(tab.filePath, exportHtml(docFile))
       if (res.canceled) return false
@@ -287,7 +330,9 @@ export async function maybeRestoreRecovery(editor: Editor): Promise<void> {
     title: d.title,
     theme: { ...defaultTheme, ...d.theme },
     dirty: true,
-    doc: d.tiptapDoc
+    doc: d.tiptapDoc,
+    state: null,
+    scrollTop: 0
   }))
   useTabsStore.getState().setAll(tabs, tabs[0].id)
   loadRecord(editor, tabs[0])

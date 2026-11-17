@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import type { Editor } from '@tiptap/react'
 import type { Transaction } from '@tiptap/pm/state'
 import { deriveTocFromDoc, tocEquals, type TocItem } from './toc'
+import { TAB_SWITCH_META } from '../state/tabsActions'
 
 /**
  * Live list of headings derived from the editor. To keep typing fast, the TOC
@@ -28,6 +29,8 @@ export function useToc(editor: Editor | null): TocItem[] {
     }
     const onTransaction = ({ transaction }: { transaction: Transaction }): void => {
       if (transaction.docChanged) schedule()
+      // Switching tabs swaps the whole document: refresh immediately.
+      else if (transaction.getMeta(TAB_SWITCH_META)) recompute()
     }
 
     recompute()

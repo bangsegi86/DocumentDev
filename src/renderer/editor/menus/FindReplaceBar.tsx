@@ -1,7 +1,9 @@
 import { useEffect, useRef, useState } from 'react'
 import type { Editor } from '@tiptap/react'
 import { useI18n } from '../../i18n/I18nContext'
+import type { Transaction } from '@tiptap/pm/state'
 import { getSearchState } from '../extensions/SearchReplace'
+import { TAB_SWITCH_META } from '../../state/tabsActions'
 
 /** Floating Find & Replace bar (toggled with Ctrl+F, closed with Esc). */
 export function FindReplaceBar({
@@ -35,8 +37,19 @@ export function FindReplaceBar({
   }, [])
 
   // Mirror match count / current index from the plugin on every transaction.
+  // Each tab has its own editor state (and search state), so after a tab
+  // switch re-apply the current term to the newly shown document.
+  const findRef2 = useRef(find)
+  findRef2.current = find
+  const caseRef = useRef(caseSensitive)
+  caseRef.current = caseSensitive
   useEffect(() => {
-    const update = (): void => {
+    const update = ({ transaction }: { transaction?: Transaction } = {}): void => {
+      if (transaction?.getMeta(TAB_SWITCH_META)) {
+        editor.commands.setSearchCaseSensitive(caseRef.current)
+        editor.commands.setSearchTerm(findRef2.current)
+        return // the commands above dispatch again and land back here
+      }
       const s = getSearchState(editor.state)
       setInfo({ total: s.matches.length, current: s.matches.length ? s.current + 1 : 0 })
     }

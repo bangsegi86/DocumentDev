@@ -1,5 +1,6 @@
 import { create } from 'zustand'
 import type { JSONContent } from '@tiptap/core'
+import type { EditorState } from '@tiptap/pm/state'
 import type { ThemeSettings } from '@shared/types'
 
 /** One open document tab. For the ACTIVE tab the live truth is `documentStore`
@@ -10,8 +11,19 @@ export interface TabRecord {
   title: string
   theme: ThemeSettings
   dirty: boolean
-  /** Content snapshot (kept fresh for inactive tabs; refreshed on switch/save). */
+  /** Initial content for a tab that has never been shown (new/opened/recovered).
+   *  Once the tab has been visited, `state` is the source of truth instead. */
   doc: JSONContent | null
+  /** The tab's full ProseMirror state (content + its OWN undo history +
+   *  selection), saved when switching away and restored when switching back. */
+  state: EditorState | null
+  /** Scroll offset of the content pane, restored on switch-back. */
+  scrollTop: number
+}
+
+/** The tab's current content as JSON (for saving / recovery snapshots). */
+export function tabDocJSON(rec: TabRecord): JSONContent | null {
+  return rec.state ? (rec.state.doc.toJSON() as JSONContent) : rec.doc
 }
 
 interface TabsStore {
