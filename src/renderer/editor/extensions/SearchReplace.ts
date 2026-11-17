@@ -33,18 +33,51 @@ declare module '@tiptap/core' {
   }
 }
 
+/** Lower-case without changing the string length (a few characters, e.g.
+ *  'İ', lower-case to two code units; those are left as is), so character
+ *  indexes keep mapping to document positions. */
+function lowerSameLength(text: string): string {
+  const lower = text.toLowerCase()
+  if (lower.length === text.length) return lower
+  let out = ''
+  for (let i = 0; i < text.length; i++) {
+    const l = text[i].toLowerCase()
+    out += l.length === 1 ? l : text[i]
+  }
+  return out
+}
+
+/**
+ * Find every occurrence of `term`. Text is searched per textblock (paragraph,
+ * heading, cell paragraph, code block) with its text nodes joined, so a match
+ * may span formatting changes ("Hello **world**" matches "lo wo"). Inline
+ * non-text nodes (e.g. a hard break) act as a separator a match can't cross.
+ */
 function gatherMatches(doc: PMNode, term: string, caseSensitive: boolean): Match[] {
   const matches: Match[] = []
   if (!term) return matches
-  const needle = caseSensitive ? term : term.toLowerCase()
-  doc.descendants((node, pos) => {
-    if (!node.isText || !node.text) return
-    const haystack = caseSensitive ? node.text : node.text.toLowerCase()
+  const needle = caseSensitive ? term : lowerSameLength(term)
+  doc.descendants((block, blockPos) => {
+    if (!block.isTextblock) return true
+    let text = ''
+    const posAt: number[] = [] // document position of each char in `text`
+    block.forEach((child, offset) => {
+      const start = blockPos + 1 + offset
+      if (child.isText && child.text) {
+        text += child.text
+        for (let i = 0; i < child.text.length; i++) posAt.push(start + i)
+      } else {
+        text += '\uFFFF' // separator that never matches user input
+        posAt.push(start)
+      }
+    })
+    const haystack = caseSensitive ? text : lowerSameLength(text)
     let idx = haystack.indexOf(needle)
     while (idx !== -1) {
-      matches.push({ from: pos + idx, to: pos + idx + term.length })
+      matches.push({ from: posAt[idx], to: posAt[idx + needle.length - 1] + 1 })
       idx = haystack.indexOf(needle, idx + needle.length)
     }
+    return false
   })
   return matches
 }
