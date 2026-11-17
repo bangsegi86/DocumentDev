@@ -3,7 +3,7 @@ import type { DocFile } from '@shared/types'
 import { FILE_EXTENSION } from '@shared/constants'
 import { useDocumentStore } from './documentStore'
 import { exportHtml } from '../export/exportHtml'
-import { exportWord } from '../export/exportWord'
+import { exportDocx } from '../export/exportDocx'
 import { ko } from '../i18n/ko'
 import { en } from '../i18n/en'
 
@@ -87,8 +87,8 @@ export async function printCurrentDocument(editor: Editor): Promise<void> {
 
 export async function exportWordDocument(editor: Editor): Promise<void> {
   try {
-    const doc = exportWord(currentDocFile(editor))
-    await window.api.saveWord(`${safeBaseName()}.doc`, doc)
+    const bytes = await exportDocx(currentDocFile(editor))
+    await window.api.saveWord(`${safeBaseName()}.docx`, bytes)
   } catch (e) {
     window.alert(`${dict().exportFailed}\n${e instanceof Error ? e.message : String(e)}`)
   }

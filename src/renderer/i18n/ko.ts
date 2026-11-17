@@ -122,7 +122,7 @@ export const ko = {
   statusUnsaved: '저장 안 됨',
   statusNew: '새 문서',
   exportMenu: '내보내기',
-  exportWordItem: '워드 문서(.doc)',
+  exportWordItem: '워드 문서(.docx)',
   saveAsItem: '다른 이름으로 저장…',
   editTitleHint: '클릭해서 문서 제목 수정',
   themeTopbar: '상단바',

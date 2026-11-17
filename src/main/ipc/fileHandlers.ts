@@ -35,7 +35,7 @@ export function registerFileHandlers(): void {
     return saveFileAsDialog(win, suggestedName, contents)
   })
 
-  ipcMain.handle(IPC.fileSaveWord, (event, suggestedName: string, contents: string) => {
+  ipcMain.handle(IPC.fileSaveWord, (event, suggestedName: string, contents: Uint8Array) => {
     const win = BrowserWindow.fromWebContents(event.sender)!
     return saveWordDialog(win, suggestedName, contents)
   })

@@ -1,5 +1,6 @@
 import { exportHtml } from '../src/renderer/export/exportHtml'
-import { exportWord } from '../src/renderer/export/exportWord'
+import { exportDocx } from '../src/renderer/export/exportDocx'
+import JSZip from 'jszip'
 import { extractPayload } from '../src/shared/fileFormat'
 import { getSchema } from '@tiptap/core'
 import { buildExtensions } from '../src/renderer/editor/extensions'
@@ -97,10 +98,6 @@ assert(html.includes('.doc-topbar') && html.includes('--doc-topbar-bg'), 'layout
 console.log('== per-heading styles (color / bold / italic) ==')
 assert(html.includes('--doc-h1-color:') && html.includes('var(--doc-h1-color)'), 'per-heading style vars inlined and used')
 const headTheme = { ...defaultTheme, h1Color: '#112233', h2Italic: true, h3Bold: false }
-const headWord = exportWord({ version: 1, title: 'H', lang: 'ko', theme: headTheme, tiptapDoc: doc })
-assert(/h1\s*{[^}]*color:\s*#112233/i.test(headWord), 'h1 custom color in Word export')
-assert(/h2\s*{[^}]*font-style:\s*italic/i.test(headWord), 'h2 italic in Word export')
-assert(/h3\s*{[^}]*font-weight:\s*400/i.test(headWord), 'h3 bold-off in Word export')
 
 console.log('== round-trip payload ==')
 const parsed = extractPayload(html)
@@ -143,10 +140,6 @@ const styledFile: DocFile = { version: 1, title: 'X', lang: 'ko', theme: default
 const styledHtml = exportHtml(styledFile)
 assert(/color:\s*#ff0000/i.test(styledHtml), 'text color renders in HTML export')
 assert(/background-color:\s*#ffff00/i.test(styledHtml), 'cell background renders in HTML export')
-const word = exportWord(styledFile)
-assert(word.includes('urn:schemas-microsoft-com:office:word'), 'Word export has MS Office namespace')
-assert(/background-color:\s*#ffff00/i.test(word), 'cell background renders in Word export')
-assert(/color:\s*#ff0000/i.test(word), 'text color renders in Word export')
 
 console.log('== image: width/align/base64 survive export + round-trip ==')
 const b64 = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg=='
@@ -185,9 +178,6 @@ assert(/<figure[^>]*data-align="center"/.test(capHtml), 'alignment moves onto th
 assert(extractPayload(capHtml)!.tiptapDoc.content![0].attrs!.caption === 'Figure 1. Demo', 'caption round-trips in payload')
 // An image WITHOUT a caption still renders a bare <img> (no figure).
 assert(!/<figure/.test(imgHtml), 'uncaptioned image stays a bare <img>')
-const imgWord = exportWord(imgFile)
-assert(/<img/.test(imgWord) && imgWord.includes(b64), 'image embedded in Word export')
-assert(/<p align="center"><img/.test(imgWord), 'centered image wrapped for Word')
 
 // Tampered theme values must not break out of the <style> block (A5).
 const evilTheme = {
@@ -201,8 +191,6 @@ const evilStyle = evilHtml.slice(evilHtml.indexOf('<style>'), evilHtml.indexOf('
 assert(!/<script/i.test(evilStyle) && (evilHtml.match(/<\/style>/g) || []).length === 1, 'theme values cannot close <style> / inject <script> (HTML)')
 const themeBlock = evilHtml.slice(evilHtml.lastIndexOf('--doc-topbar-bg:'))
 assert(themeBlock.slice(0, themeBlock.indexOf('}')).includes('--doc-font-size:'), 'theme values cannot close the variable block early (no injected CSS rules)')
-const evilWord = exportWord(evil)
-assert((evilWord.match(/<\/style>/g) || []).length === 1 && !/alert\(1\)<\/script>/.test(evilWord), 'theme values cannot inject into Word export')
 
 // ---- Payload size (B2/B3) ----
 {
@@ -249,7 +237,106 @@ assert((evilWord.match(/<\/style>/g) || []).length === 1 && !/alert\(1\)<\/scrip
 
 import { writeFileSync } from 'node:fs'
 writeFileSync('out/sample.html', html, 'utf-8')
-writeFileSync('out/sample.doc', word, 'utf-8')
 console.log('\nwrote out/sample.html (' + html.length + ' bytes)')
 
-console.log('\nALL SMOKE TESTS PASSED')
+// ---- Word (.docx) export: a real OOXML package (async) ----
+async function docxParts(file: DocFile): Promise<{ zip: JSZip; doc: string; styles: string; bytes: Uint8Array }> {
+  const bytes = await exportDocx(file)
+  const zip = await JSZip.loadAsync(bytes)
+  return { zip, bytes, doc: await zip.file('word/document.xml')!.async('string'), styles: await zip.file('word/styles.xml')!.async('string') }
+}
+
+async function wordTests(): Promise<void> {
+  console.log('== Word (.docx) export ==')
+  const basic = await docxParts(docFile)
+  assert(basic.bytes[0] === 0x50 && basic.bytes[1] === 0x4b, 'docx is a ZIP package')
+  assert(basic.doc.includes('RMS Interface Doc') && basic.doc.includes('Content-Type'), 'title and table text present')
+  assert(/<w:tbl>/.test(basic.doc) && /<w:tblHeader\/>/.test(basic.doc), 'table exported with repeating header row')
+  assert(/<w:pStyle w:val="Heading1"\/>/.test(basic.doc), 'headings use Word heading styles (navigation pane / TOC)')
+
+  const head = await docxParts({ version: 1, title: 'H', lang: 'ko', theme: headTheme, tiptapDoc: doc })
+  const styleOf = (id: string): string => {
+    const m = new RegExp(`<w:style[^>]*w:styleId="${id}"[\\s\\S]*?</w:style>`).exec(head.styles)
+    return m ? m[0] : ''
+  }
+  assert(/w:color w:val="112233"/.test(styleOf('Heading1')), 'h1 custom color in Word export')
+  assert(/<w:i\/>|<w:i w:val="true"\/>/.test(styleOf('Heading2')), 'h2 italic in Word export')
+  assert(/<w:b w:val="false"\/>/.test(styleOf('Heading3')) || !/<w:b\/>/.test(styleOf('Heading3')), 'h3 bold-off in Word export')
+  assert(/w:eastAsia="Malgun Gothic"/.test(head.styles), 'Korean text gets a Korean font')
+
+  const styled = await docxParts(styledFile)
+  assert(/w:fill="FFFF00"/.test(styled.doc), 'cell background renders in Word export')
+  assert(/<w:color w:val="FF0000"\/>/.test(styled.doc), 'text color renders in Word export')
+
+  const img = await docxParts(imgFile)
+  const media = Object.keys(img.zip.files).filter((f) => f.startsWith('word/media/') && !f.endsWith('/'))
+  assert(media.length === 1, 'image embedded in Word export')
+  assert(/<w:jc w:val="center"\/>[\s\S]*?<w:drawing>/.test(img.doc), 'centered image is centered in Word')
+
+  const evilDoc = await docxParts(evil)
+  assert(!/<script/i.test(evilDoc.styles + evilDoc.doc), 'tampered theme values cannot inject markup into Word export')
+
+  writeFileSync('out/sample.docx', basic.bytes)
+
+  // Full-size artifacts for manual/visual review (out/ is not committed).
+  const real = extractPayload(readFileSync('sampleDoc/아성다이소 세종허브센터 Dipas Interface Doc.html', 'utf8'))!
+  writeFileSync('out/sample-real.docx', await exportDocx(real))
+  const rich: DocFile = {
+    version: 1,
+    title: '기능 점검 문서',
+    lang: 'ko',
+    theme: defaultTheme,
+    tiptapDoc: {
+      type: 'doc',
+      content: [
+        { type: 'heading', attrs: { level: 1 }, content: [{ type: 'text', text: '1. 개요' }] },
+        { type: 'paragraph', content: [
+          { type: 'text', text: '굵게 ', marks: [{ type: 'bold' }] },
+          { type: 'text', text: '기울임 ', marks: [{ type: 'italic' }] },
+          { type: 'text', text: '빨간 글자 ', marks: [{ type: 'textStyle', attrs: { color: '#dc2626' } }] },
+          { type: 'text', text: 'inlineCode()', marks: [{ type: 'code' }] },
+          { type: 'text', text: ' 그리고 ' },
+          { type: 'text', text: '링크', marks: [{ type: 'link', attrs: { href: 'https://example.com' } }] }
+        ] },
+        { type: 'heading', attrs: { level: 2 }, content: [{ type: 'text', text: '1.1 목록' }] },
+        { type: 'bulletList', content: [
+          { type: 'listItem', content: [{ type: 'paragraph', content: [{ type: 'text', text: '첫 항목' }] },
+            { type: 'bulletList', content: [{ type: 'listItem', content: [{ type: 'paragraph', content: [{ type: 'text', text: '하위 항목' }] }] }] }] },
+          { type: 'listItem', content: [{ type: 'paragraph', content: [{ type: 'text', text: '둘째 항목' }] }] }
+        ] },
+        { type: 'orderedList', content: [
+          { type: 'listItem', content: [{ type: 'paragraph', content: [{ type: 'text', text: '순서 1' }] }] },
+          { type: 'listItem', content: [{ type: 'paragraph', content: [{ type: 'text', text: '순서 2' }] }] }
+        ] },
+        { type: 'heading', attrs: { level: 3 }, content: [{ type: 'text', text: '인용과 코드' }] },
+        { type: 'blockquote', content: [{ type: 'paragraph', content: [{ type: 'text', text: '인용문: 기본 정보' }] }] },
+        { type: 'codeBlock', attrs: { language: 'json' }, content: [{ type: 'text', text: '{\n  "id": 1,\n  "name": "DPS"\n}' }] },
+        { type: 'horizontalRule' },
+        { type: 'table', content: [
+          { type: 'tableRow', content: [
+            { type: 'tableHeader', attrs: { colwidth: [68] }, content: [{ type: 'paragraph', content: [{ type: 'text', text: '번호' }] }] },
+            { type: 'tableHeader', attrs: { colspan: 2 }, content: [{ type: 'paragraph', content: [{ type: 'text', text: '병합된 머리글' }] }] }
+          ] },
+          { type: 'tableRow', content: [
+            { type: 'tableCell', attrs: { rowspan: 2, colwidth: [68] }, content: [{ type: 'paragraph', content: [{ type: 'text', text: '1' }] }] },
+            { type: 'tableCell', attrs: { backgroundColor: '#fef9c3' }, content: [{ type: 'paragraph', content: [{ type: 'text', text: '노란 셀' }] }] },
+            { type: 'tableCell', content: [{ type: 'paragraph', content: [{ type: 'text', text: 'B' }] }] }
+          ] },
+          { type: 'tableRow', content: [
+            { type: 'tableCell', content: [{ type: 'paragraph', content: [{ type: 'text', text: 'C' }] }] },
+            { type: 'tableCell', content: [{ type: 'paragraph', content: [{ type: 'text', text: 'D' }] }] }
+          ] }
+        ] },
+        { type: 'image', attrs: { src: `data:image/png;base64,${b64}`, width: 120, align: 'center', caption: '그림 1. 캡션' } }
+      ]
+    }
+  }
+  writeFileSync('out/sample-rich.docx', await exportDocx(rich))
+}
+
+wordTests()
+  .then(() => console.log('\nALL SMOKE TESTS PASSED'))
+  .catch((e) => {
+    console.error(e)
+    process.exit(1)
+  })

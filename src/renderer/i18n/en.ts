@@ -120,7 +120,7 @@ export const en: Record<keyof typeof ko, string> = {
   statusUnsaved: 'Unsaved changes',
   statusNew: 'New document',
   exportMenu: 'Export',
-  exportWordItem: 'Word document (.doc)',
+  exportWordItem: 'Word document (.docx)',
   saveAsItem: 'Save as…',
   editTitleHint: 'Click to edit the document title',
   themeTopbar: 'Top bar',

@@ -113,7 +113,8 @@ export interface DocApi {
   openFile(): Promise<OpenResult>
   saveFile(path: string, contents: string, force?: boolean): Promise<SaveResult>
   saveFileAs(suggestedName: string, contents: string): Promise<SaveResult>
-  saveWord(suggestedName: string, contents: string): Promise<SaveResult>
+  /** Save a .docx file (binary). */
+  saveWord(suggestedName: string, contents: Uint8Array): Promise<SaveResult>
   /** Render the exported HTML to an A4 PDF (asks where to save). */
   exportPdf(suggestedName: string, html: string, lang: Lang): Promise<SaveResult>
   /** Open the system print dialog for the exported HTML. */
