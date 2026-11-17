@@ -43,7 +43,6 @@ export const ko = {
   topBarTextColor: '상단바 글자색',
   sidebarColor: '사이드바 색상',
   sidebarTextColor: '사이드바 글자색',
-  headingColor: '제목 색상',
   headingStyles: '제목 스타일 (색상·굵게·기울임)',
   linkColor: '링크 색상',
   tableBorderColor: '표 테두리 색상',

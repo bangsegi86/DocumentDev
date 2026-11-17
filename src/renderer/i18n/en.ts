@@ -42,7 +42,6 @@ export const en: Record<keyof typeof ko, string> = {
   topBarTextColor: 'Top bar text color',
   sidebarColor: 'Sidebar color',
   sidebarTextColor: 'Sidebar text color',
-  headingColor: 'Heading color',
   headingStyles: 'Heading styles (color · bold · italic)',
   linkColor: 'Link color',
   tableBorderColor: 'Table border color',

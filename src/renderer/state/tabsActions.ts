@@ -73,8 +73,7 @@ function loadRecord(editor: Editor, rec: TabRecord): void {
     filePath: rec.filePath,
     title: rec.title,
     lang,
-    theme: rec.theme,
-    doc: null
+    theme: rec.theme
   })
   editor.view.updateState(stateFor(editor, rec))
   // updateState emits no editor events; dispatch an empty, non-undoable

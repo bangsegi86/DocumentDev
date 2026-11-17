@@ -297,8 +297,7 @@ function Workbench(): JSX.Element {
       exportWord: () => void exportWordDocument(editor),
       find: () => setShowFind(true),
       toggleLang,
-      toggleSpellcheck: () => setSpellcheck((v) => !v),
-      toggleTheme: () => setThemeOpen((v) => !v)
+      toggleSpellcheck: () => setSpellcheck((v) => !v)
     }
     const off = window.api.onMenuAction((action) => handlers[action]?.())
     return off

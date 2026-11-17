@@ -8,7 +8,6 @@ export function themeToStyle(theme: ThemeSettings): CSSProperties {
     '--doc-topbar-fg': theme.topBarTextColor,
     '--doc-sidebar-bg': theme.sidebarColor,
     '--doc-sidebar-fg': theme.sidebarTextColor,
-    '--doc-heading': theme.headingColor,
     '--doc-h1-color': theme.h1Color,
     '--doc-h1-weight': theme.h1Bold ? '700' : '400',
     '--doc-h1-style': theme.h1Italic ? 'italic' : 'normal',
@@ -59,7 +58,6 @@ export function themeToCss(rawTheme: ThemeSettings, selector = ':root'): string 
   --doc-topbar-fg: ${theme.topBarTextColor};
   --doc-sidebar-bg: ${theme.sidebarColor};
   --doc-sidebar-fg: ${theme.sidebarTextColor};
-  --doc-heading: ${theme.headingColor};
   --doc-h1-color: ${theme.h1Color};
   --doc-h1-weight: ${theme.h1Bold ? '700' : '400'};
   --doc-h1-style: ${theme.h1Italic ? 'italic' : 'normal'};

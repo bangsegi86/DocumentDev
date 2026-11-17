@@ -11,7 +11,6 @@ export interface ThemeSettings {
   topBarTextColor: string
   sidebarColor: string
   sidebarTextColor: string
-  headingColor: string
   // Per-level heading styles (주제 / 부제 / 소제).
   h1Color: string
   h1Bold: boolean
@@ -91,7 +90,6 @@ export type MenuAction =
   | 'saveAs'
   | 'exportWord'
   | 'find'
-  | 'toggleTheme'
   | 'toggleSpellcheck'
   | 'toggleLang'
 

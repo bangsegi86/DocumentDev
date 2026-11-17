@@ -8,7 +8,6 @@ export const defaultTheme: ThemeSettings = {
   topBarTextColor: '#ffffff',
   sidebarColor: '#f3f4f6',
   sidebarTextColor: '#374151',
-  headingColor: '#2f5f8f',
   h1Color: '#2f5f8f',
   h1Bold: true,
   h1Italic: false,
