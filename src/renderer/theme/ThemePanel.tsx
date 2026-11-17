@@ -5,6 +5,7 @@ import { FONT_OPTIONS } from './defaultTheme'
 import { downscaleDataUri, MAX_LOGO_WIDTH } from '../lib/downscaleImage'
 import { ColorField, PRESET_COLORS } from './ColorField'
 import type { ThemeSettings } from '@shared/types'
+import { Icon } from '../ui/icons'
 
 type ColorKey = Extract<
   keyof ThemeSettings,
@@ -20,18 +21,6 @@ type ColorKey = Extract<
   | 'bodyTextColor'
 >
 
-const COLOR_FIELDS: ColorKey[] = [
-  'topBarColor',
-  'topBarTextColor',
-  'sidebarColor',
-  'sidebarTextColor',
-  'linkColor',
-  'tableBorderColor',
-  'tableHeaderBackground',
-  'codeBlockBackground',
-  'breadcrumbColor',
-  'bodyTextColor'
-]
 
 /** One heading level (주제/부제/소제): colour swatch + bold + italic toggles. */
 function HeadingStyleRow({
@@ -122,7 +111,7 @@ function HeadingStyleRow({
   )
 }
 
-export function ThemePanel(): JSX.Element {
+export function ThemePanel({ onClose }: { onClose: () => void }): JSX.Element {
   const { t } = useI18n()
   const theme = useDocumentStore((s) => s.theme)
   const setTheme = useDocumentStore((s) => s.setTheme)
@@ -141,82 +130,113 @@ export function ThemePanel(): JSX.Element {
     { label: t('h3Short'), c: 'h3Color', b: 'h3Bold', i: 'h3Italic' }
   ] as const
 
-  return (
-    <aside className="theme-panel">
-      <h2>{t('theme')}</h2>
+  const color = (key: ColorKey): JSX.Element => (
+    <ColorField
+      key={key}
+      label={t(key)}
+      value={theme[key]}
+      onChange={(c) => setTheme({ [key]: c } as Partial<ThemeSettings>)}
+    />
+  )
 
-      <div className="theme-row theme-logo-row">
-        <span>{t('topbarLogo')}</span>
-        <div className="theme-logo-controls">
-          {theme.logoDataUrl ? (
-            <>
-              <img className="theme-logo-preview" src={theme.logoDataUrl} alt="logo" />
-              <button type="button" onClick={() => void pickLogo()}>
-                {t('changeLogo')}
-              </button>
-              <button type="button" onClick={() => setTheme({ logoDataUrl: '' })}>
-                {t('removeLogo')}
-              </button>
-            </>
-          ) : (
-            <button type="button" onClick={() => void pickLogo()}>
-              {t('addLogo')}
-            </button>
-          )}
-        </div>
+  return (
+    <aside className="theme-panel" aria-label={t('theme')}>
+      <header className="theme-panel-head">
+        <h2>{t('theme')}</h2>
+        <button type="button" className="theme-close" onClick={onClose} title={t('closePanel')} aria-label={t('closePanel')}>
+          <Icon name="close" size={16} />
+        </button>
+      </header>
+
+      <div className="theme-panel-body">
+        <section className="theme-section">
+          <h3>{t('themeTopbar')}</h3>
+          <div className="theme-row theme-logo-row">
+            <span>{t('topbarLogo')}</span>
+            <div className="theme-logo-controls">
+              {theme.logoDataUrl ? (
+                <>
+                  <img className="theme-logo-preview" src={theme.logoDataUrl} alt="" />
+                  <button type="button" onClick={() => void pickLogo()}>
+                    {t('changeLogo')}
+                  </button>
+                  <button type="button" onClick={() => setTheme({ logoDataUrl: '' })}>
+                    {t('removeLogo')}
+                  </button>
+                </>
+              ) : (
+                <button type="button" onClick={() => void pickLogo()}>
+                  {t('addLogo')}
+                </button>
+              )}
+            </div>
+          </div>
+          {color('topBarColor')}
+          {color('topBarTextColor')}
+        </section>
+
+        <section className="theme-section">
+          <h3>{t('themeSidebar')}</h3>
+          {color('sidebarColor')}
+          {color('sidebarTextColor')}
+          {color('breadcrumbColor')}
+        </section>
+
+        <section className="theme-section">
+          <h3>{t('themeHeadings')}</h3>
+          {headings.map((h) => (
+            <HeadingStyleRow
+              key={h.c}
+              label={h.label}
+              color={theme[h.c] as string}
+              bold={theme[h.b] as boolean}
+              italic={theme[h.i] as boolean}
+              onColor={(c) => setTheme({ [h.c]: c } as Partial<ThemeSettings>)}
+              onBold={() => setTheme({ [h.b]: !(theme[h.b] as boolean) } as Partial<ThemeSettings>)}
+              onItalic={() => setTheme({ [h.i]: !(theme[h.i] as boolean) } as Partial<ThemeSettings>)}
+            />
+          ))}
+        </section>
+
+        <section className="theme-section">
+          <h3>{t('themeBody')}</h3>
+          <label className="theme-row">
+            <span>{t('bodyFont')}</span>
+            <select value={theme.bodyFont} onChange={(e) => setTheme({ bodyFont: e.target.value })}>
+              {FONT_OPTIONS.map((f) => (
+                <option key={f.label} value={f.value}>
+                  {f.label}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className="theme-row">
+            <span>{t('bodyFontSize')}</span>
+            <select value={theme.bodyFontSize} onChange={(e) => setTheme({ bodyFontSize: e.target.value })}>
+              {['10pt', '11pt', '12pt', '13px', '14px', '15px', '16px', '17px', '18px'].map((sz) => (
+                <option key={sz} value={sz}>
+                  {sz}
+                </option>
+              ))}
+            </select>
+          </label>
+          {color('bodyTextColor')}
+          {color('linkColor')}
+        </section>
+
+        <section className="theme-section">
+          <h3>{t('themeTablesCode')}</h3>
+          {color('tableBorderColor')}
+          {color('tableHeaderBackground')}
+          {color('codeBlockBackground')}
+        </section>
       </div>
 
-      <div className="theme-group-label">{t('headingStyles')}</div>
-      {headings.map((h) => (
-        <HeadingStyleRow
-          key={h.c}
-          label={h.label}
-          color={theme[h.c] as string}
-          bold={theme[h.b] as boolean}
-          italic={theme[h.i] as boolean}
-          onColor={(color) => setTheme({ [h.c]: color } as Partial<ThemeSettings>)}
-          onBold={() => setTheme({ [h.b]: !(theme[h.b] as boolean) } as Partial<ThemeSettings>)}
-          onItalic={() => setTheme({ [h.i]: !(theme[h.i] as boolean) } as Partial<ThemeSettings>)}
-        />
-      ))}
-
-      {COLOR_FIELDS.map((key) => (
-        <ColorField
-          key={key}
-          label={t(key)}
-          value={theme[key]}
-          onChange={(color) => setTheme({ [key]: color } as Partial<ThemeSettings>)}
-        />
-      ))}
-
-      <label className="theme-row">
-        <span>{t('bodyFont')}</span>
-        <select value={theme.bodyFont} onChange={(e) => setTheme({ bodyFont: e.target.value })}>
-          {FONT_OPTIONS.map((f) => (
-            <option key={f.label} value={f.value}>
-              {f.label}
-            </option>
-          ))}
-        </select>
-      </label>
-
-      <label className="theme-row">
-        <span>{t('bodyFontSize')}</span>
-        <select
-          value={theme.bodyFontSize}
-          onChange={(e) => setTheme({ bodyFontSize: e.target.value })}
-        >
-          {['10pt', '11pt', '12pt', '13px', '14px', '15px', '16px', '17px', '18px'].map((s) => (
-            <option key={s} value={s}>
-              {s}
-            </option>
-          ))}
-        </select>
-      </label>
-
-      <button type="button" className="theme-reset" onClick={resetTheme}>
-        {t('resetTheme')}
-      </button>
+      <footer className="theme-panel-foot">
+        <button type="button" className="theme-reset" onClick={resetTheme}>
+          {t('resetTheme')}
+        </button>
+      </footer>
     </aside>
   )
 }

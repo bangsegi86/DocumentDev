@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { useEditorState, type Editor } from '@tiptap/react'
 import { useI18n } from '../../i18n/I18nContext'
 import { CODE_LANGUAGES } from '../../lib/languages'
@@ -7,6 +7,7 @@ import { PRESET_COLORS } from '../../theme/ColorField'
 import { addNumberColumn } from '../tableNumber'
 import { autoFitTable } from '../tableAutoFit'
 import { downscaleDataUri } from '../../lib/downscaleImage'
+import { Icon } from '../../ui/icons'
 import {
   InsertRowAbove,
   InsertRowBelow,
@@ -24,15 +25,20 @@ interface BtnProps {
   active?: boolean
   disabled?: boolean
   title: string
+  className?: string
   children: React.ReactNode
 }
 
-function Btn({ onClick, active, disabled, title, children }: BtnProps): JSX.Element {
+/** Toolbar button. Keeps editor focus (mousedown is swallowed) and exposes its
+ *  toggle state to assistive tech via aria-pressed. */
+function Btn({ onClick, active, disabled, title, className, children }: BtnProps): JSX.Element {
   return (
     <button
       type="button"
-      className={`tb-btn ${active ? 'active' : ''}`}
+      className={`tb-btn ${active ? 'active' : ''} ${className ?? ''}`}
       title={title}
+      aria-label={title}
+      aria-pressed={active === undefined ? undefined : active}
       disabled={disabled}
       onMouseDown={(e) => e.preventDefault()}
       onClick={onClick}
@@ -42,52 +48,74 @@ function Btn({ onClick, active, disabled, title, children }: BtnProps): JSX.Elem
   )
 }
 
-function Sep(): JSX.Element {
-  return <span className="tb-sep" />
+/**
+ * Position a popover under its toolbar button with `position: fixed`, so it is
+ * never clipped by the toolbar (which scrolls horizontally on narrow windows).
+ */
+function useAnchoredStyle(
+  open: boolean,
+  hostRef: React.RefObject<HTMLDivElement>,
+  width = 220
+): React.CSSProperties | undefined {
+  const [style, setStyle] = useState<React.CSSProperties>()
+  useLayoutEffect(() => {
+    if (!open || !hostRef.current) return
+    const r = hostRef.current.getBoundingClientRect()
+    const left = Math.max(8, Math.min(r.left, window.innerWidth - width - 8))
+    setStyle({ position: 'fixed', top: r.bottom + 6, left })
+  }, [open, hostRef, width])
+  return style
 }
 
-/** "A" button with a color palette popover for setting selected text color. */
-function TextColorControl({ editor }: { editor: Editor }): JSX.Element {
-  const { t } = useI18n()
-  const [open, setOpen] = useState(false)
+/** Close a popover when clicking anywhere outside `ref`. */
+function useOutsideClose(open: boolean, setOpen: (v: boolean) => void): React.RefObject<HTMLDivElement> {
   const ref = useRef<HTMLDivElement>(null)
-  const current = useEditorState({
-    editor,
-    selector: ({ editor }) => (editor.getAttributes('textStyle').color as string) || '#1f2937'
-  })
-
   useEffect(() => {
     if (!open) return
     const onDoc = (e: MouseEvent): void => {
       if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false)
     }
+    const onKey = (e: KeyboardEvent): void => {
+      if (e.key === 'Escape') setOpen(false)
+    }
     document.addEventListener('mousedown', onDoc)
-    return () => document.removeEventListener('mousedown', onDoc)
-  }, [open])
+    document.addEventListener('keydown', onKey)
+    return () => {
+      document.removeEventListener('mousedown', onDoc)
+      document.removeEventListener('keydown', onKey)
+    }
+  }, [open, setOpen])
+  return ref
+}
+
+/** Text colour: "A" icon whose underline shows the current colour + palette. */
+function TextColorControl({ editor }: { editor: Editor }): JSX.Element {
+  const { t } = useI18n()
+  const [open, setOpen] = useState(false)
+  const ref = useOutsideClose(open, setOpen)
+  const pos = useAnchoredStyle(open, ref, 216)
+  const current = useEditorState({
+    editor,
+    selector: ({ editor }) => (editor.getAttributes('textStyle').color as string) || ''
+  })
 
   return (
     <div className="tb-popover-host" ref={ref}>
-      <button
-        type="button"
-        className="tb-btn tb-color-btn"
-        title={t('textColor')}
-        onMouseDown={(e) => e.preventDefault()}
-        onClick={() => setOpen((o) => !o)}
-      >
-        <span className="tb-color-A" style={{ borderBottomColor: current }}>
-          A
-        </span>
-      </button>
+      <Btn onClick={() => setOpen(!open)} active={open} title={t('textColor')} className="tb-btn-color">
+        <Icon name="textColor" />
+        <span className="tb-color-bar" style={{ background: current || 'currentColor' }} />
+      </Btn>
       {open && (
-        <div className="color-palette tb-color-palette">
+        <div className="tb-popover color-palette" style={pos}>
           <div className="color-grid">
             {PRESET_COLORS.map((c) => (
               <button
                 type="button"
                 key={c}
-                className="color-swatch"
+                className={`color-swatch ${c === current ? 'active' : ''}`}
                 style={{ background: c }}
                 title={c}
+                aria-label={c}
                 onMouseDown={(e) => e.preventDefault()}
                 onClick={() => {
                   editor.chain().focus().setColor(c).run()
@@ -98,7 +126,7 @@ function TextColorControl({ editor }: { editor: Editor }): JSX.Element {
           </div>
           <button
             type="button"
-            className="tb-color-remove"
+            className="tb-popover-action"
             onMouseDown={(e) => e.preventDefault()}
             onClick={() => {
               editor.chain().focus().unsetColor().run()
@@ -113,20 +141,12 @@ function TextColorControl({ editor }: { editor: Editor }): JSX.Element {
   )
 }
 
-/** Image insert button with a popover: upload from computer or insert by URL. */
+/** Image insert: from a file on this computer, or by URL. */
 function ImageInsertControl({ editor }: { editor: Editor }): JSX.Element {
   const { t } = useI18n()
   const [open, setOpen] = useState(false)
-  const ref = useRef<HTMLDivElement>(null)
-
-  useEffect(() => {
-    if (!open) return
-    const onDoc = (e: MouseEvent): void => {
-      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false)
-    }
-    document.addEventListener('mousedown', onDoc)
-    return () => document.removeEventListener('mousedown', onDoc)
-  }, [open])
+  const ref = useOutsideClose(open, setOpen)
+  const pos = useAnchoredStyle(open, ref, 200)
 
   const fromFile = async (): Promise<void> => {
     setOpen(false)
@@ -143,23 +163,44 @@ function ImageInsertControl({ editor }: { editor: Editor }): JSX.Element {
 
   return (
     <div className="tb-popover-host" ref={ref}>
-      <button
-        type="button"
-        className="tb-btn"
-        title={t('image')}
-        onMouseDown={(e) => e.preventDefault()}
-        onClick={() => setOpen((o) => !o)}
-      >
-        🖼
-      </button>
+      <Btn onClick={() => setOpen(!open)} active={open} title={t('image')}>
+        <Icon name="image" />
+      </Btn>
       {open && (
-        <div className="tb-menu">
-          <button type="button" className="tb-menu-item" onMouseDown={(e) => e.preventDefault()} onClick={() => void fromFile()}>
-            📁 {t('imageFromFile')}
+        <div className="tb-popover tb-menu" role="menu" style={pos}>
+          <button type="button" role="menuitem" className="tb-menu-item" onMouseDown={(e) => e.preventDefault()} onClick={() => void fromFile()}>
+            <Icon name="folderOpen" size={16} />
+            {t('imageFromFile')}
           </button>
-          <button type="button" className="tb-menu-item" onMouseDown={(e) => e.preventDefault()} onClick={fromUrl}>
-            🔗 {t('imageFromUrl')}
+          <button type="button" role="menuitem" className="tb-menu-item" onMouseDown={(e) => e.preventDefault()} onClick={fromUrl}>
+            <Icon name="link" size={16} />
+            {t('imageFromUrl')}
           </button>
+        </div>
+      )}
+    </div>
+  )
+}
+
+/** Table insert: grid picker for rows × columns. */
+function TableInsertControl({ editor, inTable }: { editor: Editor; inTable: boolean }): JSX.Element {
+  const { t } = useI18n()
+  const [open, setOpen] = useState(false)
+  const ref = useOutsideClose(open, setOpen)
+  const pos = useAnchoredStyle(open, ref, 200)
+  return (
+    <div className="tb-popover-host" ref={ref}>
+      <Btn onClick={() => setOpen(!open)} active={open || inTable} title={t('table')}>
+        <Icon name="table" />
+      </Btn>
+      {open && (
+        <div className="tb-popover" style={pos}>
+          <TableGridPicker
+            onPick={(rows, cols) => {
+              editor.chain().focus().insertTable({ rows, cols, withHeaderRow: true }).run()
+              setOpen(false)
+            }}
+          />
         </div>
       )}
     </div>
@@ -169,14 +210,15 @@ function ImageInsertControl({ editor }: { editor: Editor }): JSX.Element {
 export function Toolbar({
   editor,
   themeOpen,
-  onToggleTheme
+  onToggleTheme,
+  onFind
 }: {
   editor: Editor
   themeOpen: boolean
   onToggleTheme: () => void
+  onFind: () => void
 }): JSX.Element {
   const { t } = useI18n()
-  const [showGrid, setShowGrid] = useState(false)
 
   // Subscribe only to the toolbar's reactive flags (deepEqual): the toolbar
   // re-renders when formatting state changes, NOT on every keystroke.
@@ -202,9 +244,6 @@ export function Toolbar({
       link: editor.isActive('link')
     })
   })
-  const inCodeBlock = s.inCodeBlock
-  const inTable = s.inTable
-  const currentLang = s.codeLang
 
   const toggleLink = (): void => {
     if (editor.isActive('link')) {
@@ -215,81 +254,134 @@ export function Toolbar({
     if (url) editor.chain().focus().setLink({ href: url }).run()
   }
 
+  const blockStyles = [
+    { key: 'p', label: t('paragraph'), title: t('paragraph'), active: s.paragraph, run: () => editor.chain().focus().setParagraph().run() },
+    { key: 'h1', label: t('h1Short'), title: t('h1'), active: s.h1, run: () => editor.chain().focus().toggleHeading({ level: 1 }).run() },
+    { key: 'h2', label: t('h2Short'), title: t('h2'), active: s.h2, run: () => editor.chain().focus().toggleHeading({ level: 2 }).run() },
+    { key: 'h3', label: t('h3Short'), title: t('h3'), active: s.h3, run: () => editor.chain().focus().toggleHeading({ level: 3 }).run() }
+  ]
+
   return (
-    <div className="toolbar">
-      <Btn onClick={() => editor.chain().focus().undo().run()} title={t('undo')} disabled={!s.canUndo}>↶</Btn>
-      <Btn onClick={() => editor.chain().focus().redo().run()} title={t('redo')} disabled={!s.canRedo}>↷</Btn>
-      <Sep />
+    <div className="toolbar" role="toolbar" aria-label={t('formatting')}>
+      <div className="tb-group">
+        <Btn onClick={() => editor.chain().focus().undo().run()} title={t('undo')} disabled={!s.canUndo}>
+          <Icon name="undo" />
+        </Btn>
+        <Btn onClick={() => editor.chain().focus().redo().run()} title={t('redo')} disabled={!s.canRedo}>
+          <Icon name="redo" />
+        </Btn>
+      </div>
 
-      <Btn onClick={() => editor.chain().focus().setParagraph().run()} active={s.paragraph} title={t('paragraph')}>{t('paragraph')}</Btn>
-      <Btn onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()} active={s.h1} title={t('h1')}>{t('h1Short')}</Btn>
-      <Btn onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()} active={s.h2} title={t('h2')}>{t('h2Short')}</Btn>
-      <Btn onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()} active={s.h3} title={t('h3')}>{t('h3Short')}</Btn>
-      <Sep />
-
-      <Btn onClick={() => editor.chain().focus().toggleBold().run()} active={s.bold} title={t('bold')}><b>B</b></Btn>
-      <Btn onClick={() => editor.chain().focus().toggleItalic().run()} active={s.italic} title={t('italic')}><i>I</i></Btn>
-      <Btn onClick={() => editor.chain().focus().toggleStrike().run()} active={s.strike} title={t('strike')}><s>S</s></Btn>
-      <TextColorControl editor={editor} />
-      <Sep />
-
-      <Btn onClick={() => editor.chain().focus().toggleBulletList().run()} active={s.bulletList} title={t('bulletList')}>•</Btn>
-      <Btn onClick={() => editor.chain().focus().toggleOrderedList().run()} active={s.orderedList} title={t('orderedList')}>1.</Btn>
-      <Btn onClick={() => editor.chain().focus().toggleBlockquote().run()} active={s.blockquote} title={t('blockquote')}>❝</Btn>
-      <Btn onClick={() => editor.chain().focus().setHorizontalRule().run()} title={t('horizontalRule')}>―</Btn>
-      <Sep />
-
-      <Btn onClick={() => editor.chain().focus().toggleCode().run()} active={s.code} title={t('inlineCode')}>{'</>'}</Btn>
-      <Btn onClick={() => editor.chain().focus().toggleCodeBlock().run()} active={inCodeBlock} title={t('codeBlock')}>{'{ }'}</Btn>
-      {inCodeBlock && (
-        <select
-          className="tb-select"
-          value={currentLang}
-          onChange={(e) =>
-            editor.chain().focus().updateAttributes('codeBlock', { language: e.target.value }).run()
-          }
-        >
-          {CODE_LANGUAGES.map((l) => (
-            <option key={l.value} value={l.value}>
-              {l.label}
-            </option>
+      <div className="tb-group">
+        <div className="tb-seg" role="group" aria-label={t('blockStyle')}>
+          {blockStyles.map((b) => (
+            <button
+              key={b.key}
+              type="button"
+              className={`tb-seg-btn tb-seg-${b.key} ${b.active ? 'active' : ''}`}
+              title={b.title}
+              aria-pressed={b.active}
+              onMouseDown={(e) => e.preventDefault()}
+              onClick={b.run}
+            >
+              {b.label}
+            </button>
           ))}
-        </select>
-      )}
-      <Sep />
+        </div>
+      </div>
 
-      <div className="tb-popover-host">
-        <Btn onClick={() => setShowGrid((v) => !v)} active={inTable} title={t('table')}>▦</Btn>
-        {showGrid && (
-          <TableGridPicker
-            onPick={(rows, cols) => {
-              editor.chain().focus().insertTable({ rows, cols, withHeaderRow: true }).run()
-              setShowGrid(false)
-            }}
-          />
+      <div className="tb-group">
+        <Btn onClick={() => editor.chain().focus().toggleBold().run()} active={s.bold} title={t('bold')}>
+          <Icon name="bold" />
+        </Btn>
+        <Btn onClick={() => editor.chain().focus().toggleItalic().run()} active={s.italic} title={t('italic')}>
+          <Icon name="italic" />
+        </Btn>
+        <Btn onClick={() => editor.chain().focus().toggleStrike().run()} active={s.strike} title={t('strike')}>
+          <Icon name="strike" />
+        </Btn>
+        <TextColorControl editor={editor} />
+      </div>
+
+      <div className="tb-group">
+        <Btn onClick={() => editor.chain().focus().toggleBulletList().run()} active={s.bulletList} title={t('bulletList')}>
+          <Icon name="bulletList" />
+        </Btn>
+        <Btn onClick={() => editor.chain().focus().toggleOrderedList().run()} active={s.orderedList} title={t('orderedList')}>
+          <Icon name="orderedList" />
+        </Btn>
+        <Btn onClick={() => editor.chain().focus().toggleBlockquote().run()} active={s.blockquote} title={t('blockquote')}>
+          <Icon name="quote" />
+        </Btn>
+        <Btn onClick={() => editor.chain().focus().setHorizontalRule().run()} title={t('horizontalRule')}>
+          <Icon name="divider" />
+        </Btn>
+      </div>
+
+      <div className="tb-group">
+        <Btn onClick={() => editor.chain().focus().toggleCode().run()} active={s.code} title={t('inlineCode')}>
+          <Icon name="inlineCode" />
+        </Btn>
+        <Btn onClick={() => editor.chain().focus().toggleCodeBlock().run()} active={s.inCodeBlock} title={t('codeBlock')}>
+          <Icon name="codeBlock" />
+        </Btn>
+        {s.inCodeBlock && (
+          <select
+            className="tb-select"
+            title={t('codeLanguage')}
+            aria-label={t('codeLanguage')}
+            value={s.codeLang}
+            onChange={(e) =>
+              editor.chain().focus().updateAttributes('codeBlock', { language: e.target.value }).run()
+            }
+          >
+            {CODE_LANGUAGES.map((l) => (
+              <option key={l.value} value={l.value}>
+                {l.label}
+              </option>
+            ))}
+          </select>
         )}
       </div>
-      <ImageInsertControl editor={editor} />
-      <Btn onClick={toggleLink} active={s.link} title={t('link')}>🔗</Btn>
 
-      {inTable && (
-        <>
-          <Sep />
-          <Btn onClick={() => autoFitTable(editor, t('numberColumnHeader'))} title={t('autoFitTable')}><AutoFitTable /></Btn>
+      <div className="tb-group">
+        <TableInsertControl editor={editor} inTable={s.inTable} />
+        <ImageInsertControl editor={editor} />
+        <Btn onClick={toggleLink} active={s.link} title={s.link ? t('unlink') : t('link')}>
+          <Icon name="link" />
+        </Btn>
+      </div>
+
+      {s.inTable && (
+        <div className="tb-group tb-context" role="group" aria-label={t('tableTools')}>
+          <span className="tb-context-label">{t('tableTools')}</span>
           <Btn onClick={() => editor.chain().focus().addRowBefore().run()} title={t('addRowBefore')}><InsertRowAbove /></Btn>
           <Btn onClick={() => editor.chain().focus().addRowAfter().run()} title={t('addRowAfter')}><InsertRowBelow /></Btn>
           <Btn onClick={() => editor.chain().focus().addColumnBefore().run()} title={t('addColBefore')}><InsertColLeft /></Btn>
           <Btn onClick={() => editor.chain().focus().addColumnAfter().run()} title={t('addColAfter')}><InsertColRight /></Btn>
+          <span className="tb-mini-sep" />
+          <Btn onClick={() => editor.chain().focus().toggleHeaderRow().run()} title={t('toggleHeaderRow')}><HeaderRow /></Btn>
+          <Btn onClick={() => addNumberColumn(editor, t('numberColumnHeader'))} title={t('numberColumn')} className="tb-btn-text">
+            №
+          </Btn>
+          <Btn onClick={() => autoFitTable(editor, t('numberColumnHeader'))} title={t('autoFitTable')}><AutoFitTable /></Btn>
+          <span className="tb-mini-sep" />
           <Btn onClick={() => editor.chain().focus().deleteRow().run()} title={t('deleteRow')}><DeleteRow /></Btn>
           <Btn onClick={() => editor.chain().focus().deleteColumn().run()} title={t('deleteCol')}><DeleteColumn /></Btn>
-          <Btn onClick={() => editor.chain().focus().toggleHeaderRow().run()} title={t('toggleHeaderRow')}><HeaderRow /></Btn>
-          <Btn onClick={() => addNumberColumn(editor, t('numberColumnHeader'))} title={t('numberColumn')}>№</Btn>
           <Btn onClick={() => editor.chain().focus().deleteTable().run()} title={t('deleteTable')}><DeleteTable /></Btn>
-        </>
+        </div>
       )}
 
       <span className="tb-spacer" />
-      <Btn onClick={onToggleTheme} active={themeOpen} title={t('theme')}>🎨</Btn>
+
+      <div className="tb-group tb-group-end">
+        <Btn onClick={onFind} title={`${t('find')} (Ctrl+F)`}>
+          <Icon name="search" />
+        </Btn>
+        <Btn onClick={onToggleTheme} active={themeOpen} title={t('theme')}>
+          <Icon name="palette" />
+        </Btn>
+      </div>
     </div>
   )
 }

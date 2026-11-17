@@ -32,7 +32,11 @@ export function buildExtensions(options: BuildOptions = {}): Extensions {
     }),
     HeadingWithId.configure({ levels: [1, 2, 3] }),
     CodeBlockLowlight.configure({ lowlight }),
-    Table.configure({ resizable: true }),
+    // cellMinWidth: in a narrow window a many-column table scrolls sideways
+    // instead of squeezing every column to a letter wide (the default is 25px;
+    // 64 stays under the 68px fixed number column). Editor only — the export
+    // drops these inline widths.
+    Table.configure({ resizable: true, cellMinWidth: 64 }),
     TableRow,
     TableHeaderBg,
     TableCellBg,

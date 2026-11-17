@@ -3,6 +3,7 @@ import type { Editor } from '@tiptap/react'
 import { useI18n } from '../../i18n/I18nContext'
 import type { Transaction } from '@tiptap/pm/state'
 import { getSearchState } from '../extensions/SearchReplace'
+import { Icon } from '../../ui/icons'
 import { TAB_SWITCH_META } from '../../state/tabsActions'
 
 /** Floating Find & Replace bar (toggled with Ctrl+F, closed with Esc). */
@@ -96,6 +97,7 @@ export function FindReplaceBar({
       <div className="find-row">
         <input
           ref={findRef}
+          aria-label={t('findPlaceholder')}
           className="find-input"
           placeholder={t('findPlaceholder')}
           value={find}
@@ -111,26 +113,29 @@ export function FindReplaceBar({
         <span className="find-count">
           {info.total > 0 ? `${info.current} / ${info.total}` : t('noMatches')}
         </span>
-        <button className="find-btn" title={t('prevMatch')} onClick={goPrev}>
-          ↑
+        <button className="find-btn" title={`${t('prevMatch')} (Shift+Enter)`} aria-label={t('prevMatch')} onClick={goPrev}>
+          <Icon name="chevronUp" size={16} />
         </button>
-        <button className="find-btn" title={t('nextMatch')} onClick={goNext}>
-          ↓
+        <button className="find-btn" title={`${t('nextMatch')} (Enter)`} aria-label={t('nextMatch')} onClick={goNext}>
+          <Icon name="chevronDown" size={16} />
         </button>
         <button
           className={`find-btn ${caseSensitive ? 'active' : ''}`}
           title={t('matchCase')}
+          aria-label={t('matchCase')}
+          aria-pressed={caseSensitive}
           onClick={toggleCase}
         >
-          Aa
+          <Icon name="matchCase" size={18} />
         </button>
-        <button className="find-btn" title={t('closeFind')} onClick={onClose}>
-          ✕
+        <button className="find-btn" title={`${t('closeFind')} (Esc)`} aria-label={t('closeFind')} onClick={onClose}>
+          <Icon name="close" size={16} />
         </button>
       </div>
       <div className="find-row">
         <input
           className="find-input"
+          aria-label={t('replacePlaceholder')}
           placeholder={t('replacePlaceholder')}
           value={replace}
           onChange={(e) => setReplace(e.target.value)}

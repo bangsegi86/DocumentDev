@@ -162,10 +162,15 @@ export function TableContextMenu({ editor }: { editor: Editor }): JSX.Element | 
       setMenu(null)
       setPalette(null)
     }
+    const onKey = (e: KeyboardEvent): void => {
+      if (e.key === 'Escape') close()
+    }
     window.addEventListener('mousedown', close)
+    window.addEventListener('keydown', onKey)
     window.addEventListener('scroll', close, true)
     window.addEventListener('resize', close)
     return () => {
+      window.removeEventListener('keydown', onKey)
       window.removeEventListener('mousedown', close)
       window.removeEventListener('scroll', close, true)
       window.removeEventListener('resize', close)

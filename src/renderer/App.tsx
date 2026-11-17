@@ -30,78 +30,133 @@ import {
 } from './state/tabsActions'
 import type { MenuAction } from '@shared/types'
 import { APP_NAME } from '@shared/constants'
+import { Icon, AppMark } from './ui/icons'
 import { downscaleDataUri, MAX_LOGO_WIDTH } from './lib/downscaleImage'
 
-/** Shared SVG props for the 18px line icons used in the header. */
-const ICON = {
-  viewBox: '0 0 24 24',
-  width: 18,
-  height: 18,
-  fill: 'none',
-  stroke: 'currentColor',
-  strokeWidth: 2,
-  strokeLinecap: 'round' as const,
-  strokeLinejoin: 'round' as const
+/** File name shown in the app bar ("문서.html"), or null for a new document. */
+function baseName(path: string | null): string | null {
+  if (!path) return null
+  const parts = path.split(/[\\/]/)
+  return parts[parts.length - 1] || null
 }
 
-const NewIcon = (): JSX.Element => (
-  <svg {...ICON}>
-    <path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z" />
-    <path d="M14 3v6h6" />
-    <path d="M12 12v6M9 15h6" />
-  </svg>
-)
-const OpenIcon = (): JSX.Element => (
-  <svg {...ICON}>
-    <path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
-  </svg>
-)
-const SaveIcon = (): JSX.Element => (
-  <svg {...ICON}>
-    <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z" />
-    <path d="M17 21v-8H7v8" />
-    <path d="M7 3v5h8" />
-  </svg>
-)
+/** Export menu: secondary ways to write the document out. */
+function ExportMenu({ onSaveAs, onExportWord }: { onSaveAs: () => void; onExportWord: () => void }): JSX.Element {
+  const { t } = useI18n()
+  const [open, setOpen] = useState(false)
+  const ref = useRef<HTMLDivElement>(null)
+  useEffect(() => {
+    if (!open) return
+    const onDoc = (e: MouseEvent): void => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false)
+    }
+    const onKey = (e: KeyboardEvent): void => {
+      if (e.key === 'Escape') setOpen(false)
+    }
+    document.addEventListener('mousedown', onDoc)
+    document.addEventListener('keydown', onKey)
+    return () => {
+      document.removeEventListener('mousedown', onDoc)
+      document.removeEventListener('keydown', onKey)
+    }
+  }, [open])
+  const pick = (fn: () => void) => (): void => {
+    setOpen(false)
+    fn()
+  }
+  return (
+    <div className="bar-menu-host" ref={ref}>
+      <button
+        type="button"
+        className={`bar-btn ${open ? 'open' : ''}`}
+        aria-haspopup="menu"
+        aria-expanded={open}
+        onClick={() => setOpen((v) => !v)}
+      >
+        <Icon name="download" size={16} />
+        {t('exportMenu')}
+        <Icon name="chevronDown" size={14} className="bar-caret" />
+      </button>
+      {open && (
+        <div className="bar-menu" role="menu">
+          <button type="button" role="menuitem" className="bar-menu-item" onClick={pick(onExportWord)}>
+            {t('exportWordItem')}
+            <kbd>Ctrl+Shift+W</kbd>
+          </button>
+          <button type="button" role="menuitem" className="bar-menu-item" onClick={pick(onSaveAs)}>
+            {t('saveAsItem')}
+            <kbd>Ctrl+Shift+S</kbd>
+          </button>
+        </div>
+      )}
+    </div>
+  )
+}
+
 function AppHeader({
   onNew,
   onOpen,
-  onSave
+  onSave,
+  onSaveAs,
+  onExportWord
 }: {
   onNew: () => void
   onOpen: () => void
   onSave: () => void
+  onSaveAs: () => void
+  onExportWord: () => void
 }): JSX.Element {
   const { t } = useI18n()
   const dirty = useDocumentStore((s) => s.dirty)
+  const filePath = useDocumentStore((s) => s.filePath)
+  const name = baseName(filePath)
+  const status = !filePath ? t('statusNew') : dirty ? t('statusUnsaved') : t('statusSaved')
   return (
-    <header className="app-header">
-      <span className="app-brand">DocumentDev</span>
-      <button className="icon-btn" onClick={onNew} title={t('newDoc')} aria-label={t('newDoc')}>
-        <NewIcon />
-      </button>
-      <button className="icon-btn" onClick={onOpen} title={t('open')} aria-label={t('open')}>
-        <OpenIcon />
-      </button>
-      <button
-        className={`icon-btn save-icon ${dirty ? 'dirty' : ''}`}
-        onClick={onSave}
-        title={t('save')}
-        aria-label={t('save')}
-      >
-        <SaveIcon />
-      </button>
-      <span className="app-header-spacer" />
+    <header className="app-bar">
+      <div className="app-id">
+        <AppMark size={26} />
+        <div className="app-file">
+          <span className="app-file-name" title={filePath ?? undefined}>
+            {name ?? APP_NAME}
+          </span>
+          <span className={`app-file-status ${dirty ? 'is-dirty' : !filePath ? 'is-new' : ''}`}>
+            <span className="status-dot" aria-hidden="true" />
+            {status}
+          </span>
+        </div>
+      </div>
+      <div className="app-actions">
+        <button type="button" className="bar-icon-btn" onClick={onNew} title={`${t('newDoc')} (Ctrl+N)`} aria-label={t('newDoc')}>
+          <Icon name="filePlus" />
+        </button>
+        <button type="button" className="bar-icon-btn" onClick={onOpen} title={`${t('open')} (Ctrl+O)`} aria-label={t('open')}>
+          <Icon name="folderOpen" />
+        </button>
+        <span className="bar-sep" />
+        <ExportMenu onSaveAs={onSaveAs} onExportWord={onExportWord} />
+        <button
+          type="button"
+          className={`bar-btn bar-btn-primary ${dirty ? 'is-dirty' : ''}`}
+          onClick={onSave}
+          title={`${t('save')} (Ctrl+S)`}
+        >
+          <Icon name="save" size={16} />
+          {t('save')}
+        </button>
+      </div>
     </header>
   )
 }
 
 function EditableTitle(): JSX.Element {
+  const { t } = useI18n()
   const title = useDocumentStore((s) => s.title)
   const setTitle = useDocumentStore((s) => s.setTitle)
   return (
     <input
       className="doc-title-input"
+      title={t('editTitleHint')}
+      aria-label={t('documentTitle')}
       value={title}
       onChange={(e) => setTitle(e.target.value)}
       spellCheck={false}
@@ -372,20 +427,23 @@ function Workbench(): JSX.Element {
         onNew={() => newTab(editor)}
         onOpen={() => void openTab(editor)}
         onSave={() => void saveActive()}
-      />
-      <Toolbar
-        editor={editor}
-        themeOpen={themeOpen}
-        onToggleTheme={() => setThemeOpen((v) => !v)}
+        onSaveAs={() => void saveDocumentAs(editor)}
+        onExportWord={() => void exportWordDocument(editor)}
       />
       <TabBar
         onSelect={(id) => activateTab(editor, id)}
         onClose={(id) => closeTab(editor, id)}
         onNew={() => newTab(editor)}
       />
+      <Toolbar
+        editor={editor}
+        themeOpen={themeOpen}
+        onToggleTheme={() => setThemeOpen((v) => !v)}
+        onFind={() => setShowFind(true)}
+      />
       <TableContextMenu editor={editor} />
       <ImageMenu editor={editor} />
-      <div className="app-body">
+      <div className={`app-body ${themeOpen ? 'theme-open' : ''}`}>
         {showFind && <FindReplaceBar editor={editor} onClose={() => setShowFind(false)} />}
         <div className={`doc-root ${sidebarOpen ? '' : 'sidebar-collapsed'}`} style={themeToStyle(theme)}>
           <header className="doc-topbar">
@@ -409,7 +467,7 @@ function Workbench(): JSX.Element {
             </div>
           </div>
         </div>
-        {themeOpen && <ThemePanel />}
+        {themeOpen && <ThemePanel onClose={() => setThemeOpen(false)} />}
       </div>
     </div>
   )

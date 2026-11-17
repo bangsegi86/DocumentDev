@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import type { Editor } from '@tiptap/react'
 import { useI18n } from '../../i18n/I18nContext'
+import { Icon } from '../../ui/icons'
 
 interface Pos {
   top: number
@@ -88,9 +89,9 @@ export function ImageMenu({ editor }: { editor: Editor }): JSX.Element | null {
   return (
     <>
       <div className="image-menu" style={style} onMouseDown={(e) => e.preventDefault()}>
-        <button className={`im-btn ${align === 'left' ? 'active' : ''}`} title={t('alignLeft')} onClick={() => setAlign('left')}>⌶◀</button>
-        <button className={`im-btn ${align === 'center' ? 'active' : ''}`} title={t('alignCenter')} onClick={() => setAlign('center')}>▣</button>
-        <button className={`im-btn ${align === 'right' ? 'active' : ''}`} title={t('alignRight')} onClick={() => setAlign('right')}>▶⌶</button>
+        <button className={`im-btn ${align === 'left' ? 'active' : ''}`} title={t('alignLeft')} aria-label={t('alignLeft')} onClick={() => setAlign('left')}><Icon name="alignLeft" size={16} /></button>
+        <button className={`im-btn ${align === 'center' ? 'active' : ''}`} title={t('alignCenter')} aria-label={t('alignCenter')} onClick={() => setAlign('center')}><Icon name="alignCenter" size={16} /></button>
+        <button className={`im-btn ${align === 'right' ? 'active' : ''}`} title={t('alignRight')} aria-label={t('alignRight')} onClick={() => setAlign('right')}><Icon name="alignRight" size={16} /></button>
         <span className="im-sep" />
         <button className="im-btn" onClick={() => presetWidth(0.25)}>25%</button>
         <button className="im-btn" onClick={() => presetWidth(0.5)}>50%</button>
@@ -124,8 +125,8 @@ export function ImageMenu({ editor }: { editor: Editor }): JSX.Element | null {
           onChange={(e) => editor.chain().updateAttributes('image', { caption: e.target.value }).run()}
         />
         <span className="im-sep" />
-        <button className="im-btn im-confirm" onClick={deselect}>{t('imageConfirm')}</button>
-        <button className="im-btn im-delete" onClick={() => setConfirmDelete(true)}>{t('imageDelete')}</button>
+        <button className="im-btn im-confirm" onClick={deselect}><Icon name="check" size={15} />{t('imageConfirm')}</button>
+        <button className="im-btn im-delete" onClick={() => setConfirmDelete(true)}><Icon name="trash" size={15} />{t('imageDelete')}</button>
       </div>
 
       {confirmDelete && (

@@ -1,14 +1,16 @@
-/* Excel-style table editing icons (insert/delete row & column, header, delete table). */
+/* Table editing icons (insert/delete row & column, header, delete table).
+   Monochrome (currentColor) to match the app's line icons; only the
+   destructive actions keep a red accent so they read as "delete". */
 
-const GREEN = '#16a34a'
-const RED = '#dc2626'
-const BLUE = '#2563eb'
+const GREEN = 'currentColor'
+const RED = '#C2410C'
+const BLUE = 'currentColor'
 
 interface IconProps {
   size?: number
 }
 
-function Svg({ size = 16, children }: IconProps & { children: React.ReactNode }): JSX.Element {
+function Svg({ size = 18, children }: IconProps & { children: React.ReactNode }): JSX.Element {
   return (
     <svg width={size} height={size} viewBox="0 0 20 20" fill="none" aria-hidden="true">
       {children}
@@ -19,7 +21,7 @@ function Svg({ size = 16, children }: IconProps & { children: React.ReactNode })
 /** Neutral 3-row x 2-col grid frame. */
 function RowFrame(): JSX.Element {
   return (
-    <g stroke="currentColor" strokeWidth="1.2">
+    <g stroke="currentColor" strokeWidth="1.4">
       <rect x="3" y="3" width="14" height="14" rx="1.5" />
       <line x1="3" y1="7.67" x2="17" y2="7.67" />
       <line x1="3" y1="12.33" x2="17" y2="12.33" />
@@ -31,7 +33,7 @@ function RowFrame(): JSX.Element {
 /** Neutral 2-row x 3-col grid frame. */
 function ColFrame(): JSX.Element {
   return (
-    <g stroke="currentColor" strokeWidth="1.2">
+    <g stroke="currentColor" strokeWidth="1.4">
       <rect x="3" y="3" width="14" height="14" rx="1.5" />
       <line x1="7.67" y1="3" x2="7.67" y2="17" />
       <line x1="12.33" y1="3" x2="12.33" y2="17" />
@@ -43,7 +45,7 @@ function ColFrame(): JSX.Element {
 type Num = number | string
 
 function Band(props: { x: Num; y: Num; w: Num; h: Num; color: string }): JSX.Element {
-  return <rect x={props.x} y={props.y} width={props.w} height={props.h} fill={props.color} opacity="0.28" />
+  return <rect x={props.x} y={props.y} width={props.w} height={props.h} fill={props.color} opacity="0.22" />
 }
 
 function Badge({ cx, cy, sign, color }: { cx: Num; cy: Num; sign: '+' | '-'; color: string }): JSX.Element {
@@ -51,10 +53,10 @@ function Badge({ cx, cy, sign, color }: { cx: Num; cy: Num; sign: '+' | '-'; col
   const y = Number(cy)
   return (
     <g>
-      <circle cx={x} cy={y} r="3.6" fill={color} />
-      <line x1={x - 1.8} y1={y} x2={x + 1.8} y2={y} stroke="#fff" strokeWidth="1.3" strokeLinecap="round" />
+      <circle cx={x} cy={y} r="3.9" fill={color} stroke="var(--chrome-surface, #fff)" strokeWidth="1.2" />
+      <line x1={x - 1.8} y1={y} x2={x + 1.8} y2={y} stroke="var(--chrome-surface, #fff)" strokeWidth="1.3" strokeLinecap="round" />
       {sign === '+' && (
-        <line x1={x} y1={y - 1.8} x2={x} y2={y + 1.8} stroke="#fff" strokeWidth="1.3" strokeLinecap="round" />
+        <line x1={x} y1={y - 1.8} x2={x} y2={y + 1.8} stroke="var(--chrome-surface, #fff)" strokeWidth="1.3" strokeLinecap="round" />
       )}
     </g>
   )
@@ -123,7 +125,7 @@ export function DeleteColumn(p: IconProps): JSX.Element {
 export function HeaderRow(p: IconProps): JSX.Element {
   return (
     <Svg {...p}>
-      <rect x="3.6" y="3.6" width="12.8" height="3.47" fill={BLUE} opacity="0.85" />
+      <rect x="3.6" y="3.6" width="12.8" height="3.47" fill={BLUE} opacity="0.55" />
       <RowFrame />
     </Svg>
   )
