@@ -136,6 +136,7 @@ export const ko = {
   closePanel: '닫기',
   exportPdfItem: 'PDF 문서(.pdf)',
   printItem: '인쇄…',
+  saveFailed: '저장하지 못했습니다. \'다른 이름으로 저장\'으로 다시 저장해 주세요.',
   exportFailed: '내보내기에 실패했습니다.',
   recentDocs: '최근 문서',
   noRecentDocs: '최근에 연 문서가 없습니다.',

@@ -22,6 +22,7 @@ export async function writeDocumentFile(path: string, html: string): Promise<boo
     if (!window.confirm(dict().fileChangedOnDisk)) return false
     res = await window.api.saveFile(path, html, true)
   }
+  if (res.error) window.alert(`${dict().saveFailed}\n(${res.error})`)
   return !res.canceled
 }
 

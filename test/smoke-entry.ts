@@ -235,6 +235,16 @@ assert(themeBlock.slice(0, themeBlock.indexOf('}')).includes('--doc-font-size:')
   assert(dupBack.tiptapDoc.content![4].attrs!.src === 'https://example.com/remote.png', 'remote image URLs are kept as is')
 }
 
+// Prototype keys in a received file's payload are dropped on load.
+{
+  const evilJson = '{"version":1,"title":"x","lang":"ko","theme":{},"tiptapDoc":{"type":"doc","content":[{"type":"paragraph","attrs":{"__proto__":{"onerror":"alert(1)"},"constructor":{"x":1}},"content":[{"type":"text","text":"hi"}]}]}}'
+  const evilFile = '<html><script id="docdev-data" type="application/json">' + evilJson + '</script></html>'
+  const parsed = extractPayload(evilFile)!
+  const attrs = parsed.tiptapDoc.content![0].attrs as Record<string, unknown>
+  assert(!!parsed && !Object.prototype.hasOwnProperty.call(attrs, '__proto__') && !Object.prototype.hasOwnProperty.call(attrs, 'constructor'), 'payload: __proto__ / constructor keys are stripped on load')
+  assert((attrs as { onerror?: unknown }).onerror === undefined, 'payload: no polluted attributes reach the editor')
+}
+
 import { writeFileSync } from 'node:fs'
 writeFileSync('out/sample.html', html, 'utf-8')
 console.log('\nwrote out/sample.html (' + html.length + ' bytes)')

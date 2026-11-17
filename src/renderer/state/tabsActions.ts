@@ -2,7 +2,7 @@ import type { Editor } from '@tiptap/react'
 import { createDocument, type JSONContent } from '@tiptap/core'
 import { EditorState } from '@tiptap/pm/state'
 import type { DocFile, Lang, OpenResult, ThemeSettings } from '@shared/types'
-import { extractPayload } from '@shared/fileFormat'
+import { extractPayload, safeJsonParse } from '@shared/fileFormat'
 import { useDocumentStore } from './documentStore'
 import { useTabsStore, tabDocJSON, type TabRecord } from './tabsStore'
 import { saveDocumentAs, writeDocumentFile, dict } from './fileActions'
@@ -326,7 +326,7 @@ export async function maybeRestoreRecovery(editor: Editor): Promise<void> {
   const docs = raw
     .map((s) => {
       try {
-        return JSON.parse(s) as RecoveryDoc
+        return safeJsonParse(s) as RecoveryDoc
       } catch {
         return null
       }

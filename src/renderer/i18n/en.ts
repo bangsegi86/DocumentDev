@@ -134,6 +134,7 @@ export const en: Record<keyof typeof ko, string> = {
   closePanel: 'Close',
   exportPdfItem: 'PDF document (.pdf)',
   printItem: 'Print…',
+  saveFailed: 'The document could not be saved. Please use \'Save as\' instead.',
   exportFailed: 'Export failed.',
   recentDocs: 'Recent documents',
   noRecentDocs: 'No recently opened documents.',

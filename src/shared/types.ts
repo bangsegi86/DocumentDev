@@ -59,6 +59,9 @@ export interface SaveResult {
   /** The file was changed on disk by another program since it was opened or
    *  last saved; nothing was written. Retry with force to overwrite. */
   conflict?: boolean
+  /** Set when nothing was written, e.g. 'ENOTALLOWED' for a path the user
+   *  never chose in a dialog or opened. */
+  error?: string
 }
 
 /** Result of picking an image file (returned as a base64 data URI). */

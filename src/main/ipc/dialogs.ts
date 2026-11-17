@@ -2,7 +2,7 @@ import { dialog, BrowserWindow } from 'electron'
 import { readFile, writeFile } from 'fs/promises'
 import { extname } from 'path'
 import { FILE_EXTENSION } from '../../shared/constants'
-import { readDocument, writeDocument } from '../docFiles'
+import { readDocument, writeDocument, allowPath } from '../docFiles'
 import type { OpenResult, SaveResult, ImageResult } from '../../shared/types'
 
 const FILTERS = [{ name: 'HTML Document', extensions: [FILE_EXTENSION] }]
@@ -56,6 +56,7 @@ export async function saveFileAsDialog(
   })
   if (canceled || !filePath) return { canceled: true }
   // The user picked this path in the dialog (and confirmed any overwrite).
+  allowPath(filePath)
   return writeDocument(filePath, contents, true)
 }
 

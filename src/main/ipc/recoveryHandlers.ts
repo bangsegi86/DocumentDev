@@ -2,6 +2,7 @@ import { ipcMain, app } from 'electron'
 import { promises as fs } from 'fs'
 import { join } from 'path'
 import { IPC } from '../../shared/types'
+import { allowPath } from '../docFiles'
 
 /** Directory under userData where per-tab recovery snapshots are kept. */
 function recoveryDir(): string {
@@ -32,7 +33,16 @@ export function registerRecoveryHandlers(): void {
       const files = await fs.readdir(recoveryDir())
       const out: string[] = []
       for (const f of files) {
-        if (f.endsWith('.json')) out.push(await fs.readFile(join(recoveryDir(), f), 'utf8'))
+        if (!f.endsWith('.json')) continue
+        const json = await fs.readFile(join(recoveryDir(), f), 'utf8')
+        // A recovered tab keeps saving to the file it came from.
+        try {
+          const p = (JSON.parse(json) as { filePath?: unknown }).filePath
+          if (typeof p === 'string' && /\.html?$/i.test(p)) allowPath(p)
+        } catch {
+          /* unreadable snapshot: the renderer skips it too */
+        }
+        out.push(json)
       }
       return out
     } catch {

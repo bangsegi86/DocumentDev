@@ -8,7 +8,7 @@ import {
   saveWordDialog,
   openImageDialog
 } from './dialogs'
-import { getRecent, readDocument, clearRecent } from '../docFiles'
+import { getRecent, readDocument, clearRecent, isAllowedPath } from '../docFiles'
 
 export function registerFileHandlers(): void {
   ipcMain.handle(IPC.fileOpen, (event) => {
@@ -16,7 +16,9 @@ export function registerFileHandlers(): void {
     return openFileDialog(win)
   })
 
+  // Only paths the user chose may be written (see docFiles allowPath).
   ipcMain.handle(IPC.fileSave, (_event, path: string, contents: string, force?: boolean) => {
+    if (typeof path !== 'string' || !isAllowedPath(path)) return { canceled: true, error: 'ENOTALLOWED' }
     return saveFile(path, contents, force === true)
   })
 
@@ -27,7 +29,11 @@ export function registerFileHandlers(): void {
   ipcMain.handle(IPC.filePrint, (_event, html: string) => printDocument(html))
 
   ipcMain.handle(IPC.recentList, () => getRecent())
-  ipcMain.handle(IPC.recentOpen, (_event, path: string) => readDocument(path))
+  ipcMain.handle(IPC.recentOpen, async (_event, path: string) => {
+    const recent = await getRecent()
+    if (typeof path !== 'string' || !recent.includes(path)) return { canceled: false, path, error: 'ENOTALLOWED' }
+    return readDocument(path)
+  })
   ipcMain.handle(IPC.recentClear, () => clearRecent())
 
   ipcMain.handle(IPC.fileSaveAs, (event, suggestedName: string, contents: string) => {

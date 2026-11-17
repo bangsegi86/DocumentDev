@@ -15,6 +15,17 @@ import type { OpenResult, SaveResult } from '../shared/types'
 const MAX_RECENT = 10
 let recent: string[] | null = null
 const knownMtime = new Map<string, number>()
+
+/** Paths the user chose (open/save dialogs, recent list, Open with). The
+ *  renderer may only write to these — a compromised page can't pick a path. */
+const allowedPaths = new Set<string>()
+
+export function allowPath(path: string): void {
+  allowedPaths.add(resolve(path))
+}
+export function isAllowedPath(path: string): boolean {
+  return allowedPaths.has(resolve(path))
+}
 const listeners = new Set<() => void>()
 
 function recentFile(): string {
@@ -86,6 +97,7 @@ export async function readDocument(path: string): Promise<OpenResult> {
     const contents = await fs.readFile(abs, 'utf8')
     const m = await mtimeOf(abs)
     if (m !== null) knownMtime.set(abs, m)
+    allowPath(abs)
     await addRecent(abs)
     return { canceled: false, path: abs, contents }
   } catch (e) {
@@ -109,6 +121,7 @@ export async function writeDocument(path: string, contents: string, force = fals
   await fs.writeFile(abs, contents, 'utf8')
   const m = await mtimeOf(abs)
   if (m !== null) knownMtime.set(abs, m)
+  allowPath(abs)
   await addRecent(abs)
   return { canceled: false, path: abs }
 }

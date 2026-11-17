@@ -17,7 +17,7 @@ export function extractPayload(html: string): DocFile | null {
   if (!match) return null
   try {
     const json = decodePayload(match[1].trim())
-    const parsed = JSON.parse(json) as DocFile
+    const parsed = safeJsonParse(json) as DocFile
     if (!parsed || !parsed.tiptapDoc) return null
     if (parsed.version === 1) return parsed
     if (parsed.version === 2) {
@@ -27,6 +27,19 @@ export function extractPayload(html: string): DocFile | null {
   } catch {
     return null
   }
+}
+
+/**
+ * JSON.parse that drops `__proto__` / `constructor` / `prototype` keys.
+ * Document data comes from files other people send; such keys are the
+ * entry point of prototype-pollution style attacks on the editor's attribute
+ * handling (e.g. the @tiptap/core mergeAttributes advisory), and are never
+ * produced by this app.
+ */
+export function safeJsonParse(json: string): unknown {
+  return JSON.parse(json, (key, value) =>
+    key === '__proto__' || key === 'constructor' || key === 'prototype' ? undefined : value
+  )
 }
 
 // ---- Image de-duplication -------------------------------------------------

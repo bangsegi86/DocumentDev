@@ -317,6 +317,14 @@ await suite('입력 반응 속도 (참고용)', async () => {
   console.log(`  · 샘플 문서에서 글자 하나 입력: 중간값 ${lat[15].toFixed(1)}ms, 최대 ${lat[29].toFixed(1)}ms`)
   check('중간값 50ms 미만', lat[15] < 50, lat[15].toFixed(1))
 })
+await suite('보안: 화면에서 고른 적 없는 경로는 쓰기·읽기 거부', async () => {
+  const target = join(work, 'never-chosen.html')
+  const res = await win.evaluate((p) => window.api.saveFile(p, 'x'), target)
+  check('임의 경로 저장 거부', res.error === 'ENOTALLOWED' && !existsSync(target), JSON.stringify(res))
+  const read = await win.evaluate(() => window.api.openRecent('/etc/hostname'))
+  check('최근 목록에 없는 파일 읽기 거부', read.error === 'ENOTALLOWED' && read.contents === undefined, JSON.stringify(read))
+})
+
 // Last for this window: Playwright keeps waiting on a blocked navigation.
 await suite('화면 이동 차단', async () => {
   const url = win.url()
