@@ -1209,7 +1209,16 @@ select {
   cursor: pointer;
   text-align: left;
 }
-.ctx-action:hover {
+.ctx-action:disabled {
+  color: var(--muted);
+  opacity: 0.55;
+  cursor: default;
+  background: transparent;
+}
+.ctx-action:disabled .ctx-ico {
+  color: var(--muted);
+}
+.ctx-action:hover:not(:disabled) {
   background: var(--accent-soft);
 }
 .ctx-action.danger:hover {

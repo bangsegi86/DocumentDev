@@ -8,8 +8,11 @@ import {
   InsertColRight,
   DeleteRow,
   DeleteColumn,
-  AutoFitTable
+  AutoFitTable,
+  MergeCells,
+  SplitCell
 } from '../toolbar/tableIcons'
+import { CellSelection } from '@tiptap/pm/tables'
 import { autoFitTable } from '../tableAutoFit'
 import {
   THEME_COLORS,
@@ -148,7 +151,11 @@ export function TableContextMenu({ editor }: { editor: Editor }): JSX.Element | 
       }
       if (!inTable) return
       e.preventDefault()
-      editor.commands.setTextSelection(coords.pos)
+      // Keep a multi-cell selection when right-clicking inside it, so the
+      // menu can merge those cells; otherwise act on the clicked cell.
+      const sel = editor.state.selection
+      const insideCellSelection = sel instanceof CellSelection && coords.pos >= sel.from && coords.pos <= sel.to
+      if (!insideCellSelection) editor.commands.setTextSelection(coords.pos)
       setPalette(null)
       setMenu({ x: e.clientX, y: e.clientY })
     }
@@ -268,6 +275,24 @@ export function TableContextMenu({ editor }: { editor: Editor }): JSX.Element | 
       </button>
       <button className="ctx-action" onClick={() => run(() => editor.chain().focus().addColumnAfter().run())}>
         <span className="ctx-ico"><InsertColRight /></span>{t('addColAfter')}
+      </button>
+
+      <div className="ctx-divider" />
+
+      <button
+        className="ctx-action"
+        disabled={!editor.can().mergeCells()}
+        title={editor.can().mergeCells() ? undefined : t('mergeCellsHint')}
+        onClick={() => run(() => editor.chain().focus().mergeCells().run())}
+      >
+        <span className="ctx-ico"><MergeCells /></span>{t('mergeCells')}
+      </button>
+      <button
+        className="ctx-action"
+        disabled={!editor.can().splitCell()}
+        onClick={() => run(() => editor.chain().focus().splitCell().run())}
+      >
+        <span className="ctx-ico"><SplitCell /></span>{t('splitCell')}
       </button>
 
       <div className="ctx-divider" />

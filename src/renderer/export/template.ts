@@ -47,6 +47,51 @@ const BREADCRUMB_SCRIPT = `
   window.addEventListener('resize', update);
   update();
 
+  // Contents filter: show only headings whose text contains the query.
+  var filter = document.getElementById('doc-toc-filter');
+  if (filter) {
+    var items = [].slice.call(document.querySelectorAll('.doc-toc li'));
+    var empty = document.getElementById('doc-toc-empty');
+    filter.addEventListener('input', function () {
+      var q = filter.value.trim().toLowerCase();
+      var shown = 0;
+      items.forEach(function (li) {
+        var hit = !q || li.textContent.toLowerCase().indexOf(q) !== -1;
+        li.style.display = hit ? '' : 'none';
+        if (hit) shown++;
+      });
+      if (empty) empty.hidden = shown !== 0;
+    });
+  }
+
+  // Copy button on every code block.
+  var copyLabel = document.documentElement.lang === 'ko' ? '복사' : 'Copy';
+  var copiedLabel = document.documentElement.lang === 'ko' ? '복사됨' : 'Copied';
+  [].slice.call(document.querySelectorAll('.doc-content pre')).forEach(function (pre) {
+    var btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'doc-copy';
+    btn.textContent = copyLabel;
+    btn.addEventListener('click', function () {
+      var text = pre.querySelector('code') ? pre.querySelector('code').innerText : pre.innerText;
+      var done = function () {
+        btn.textContent = copiedLabel;
+        setTimeout(function () { btn.textContent = copyLabel; }, 1500);
+      };
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(done, function () { legacy(text); done(); });
+      } else { legacy(text); done(); }
+    });
+    pre.appendChild(btn);
+  });
+  function legacy(text) {
+    var ta = document.createElement('textarea');
+    ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
+    document.body.appendChild(ta); ta.select();
+    try { document.execCommand('copy'); } catch (e) {}
+    document.body.removeChild(ta);
+  }
+
   // Hamburger: toggle the left contents sidebar.
   var toggle = document.getElementById('doc-sidebar-toggle');
   var root = document.querySelector('.doc-root');
@@ -107,7 +152,9 @@ ${parts.themeCss}
     <nav class="doc-sidebar">
       <button class="doc-sidebar-toggle" id="doc-sidebar-toggle" type="button" aria-label="Toggle contents">&#9776;</button>
       <div class="doc-toc">
+        <input class="doc-toc-filter" id="doc-toc-filter" type="search" placeholder="${parts.lang === 'ko' ? '목차 검색' : 'Filter contents'}" aria-label="${parts.lang === 'ko' ? '목차 검색' : 'Filter contents'}" />
 ${parts.tocHtml}
+        <p class="doc-toc-empty" id="doc-toc-empty" hidden>${parts.lang === 'ko' ? '일치하는 항목이 없습니다.' : 'No matching headings.'}</p>
       </div>
     </nav>
     <div class="doc-main">

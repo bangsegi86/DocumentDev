@@ -154,3 +154,30 @@ export function AutoFitTable(p: IconProps): JSX.Element {
     </Svg>
   )
 }
+
+export function MergeCells(p: IconProps): JSX.Element {
+  return (
+    <Svg {...p}>
+      <g stroke="currentColor" strokeWidth="1.4" fill="none" strokeLinecap="round" strokeLinejoin="round">
+        <rect x="3" y="3" width="14" height="14" rx="1.5" />
+        <line x1="10" y1="3" x2="10" y2="6.5" />
+        <line x1="10" y1="13.5" x2="10" y2="17" />
+        <path d="M5.5 10h3M7.3 8.4 8.8 10l-1.5 1.6" />
+        <path d="M14.5 10h-3M12.7 8.4 11.2 10l1.5 1.6" />
+      </g>
+    </Svg>
+  )
+}
+
+export function SplitCell(p: IconProps): JSX.Element {
+  return (
+    <Svg {...p}>
+      <g stroke="currentColor" strokeWidth="1.4" fill="none" strokeLinecap="round" strokeLinejoin="round">
+        <rect x="3" y="3" width="14" height="14" rx="1.5" />
+        <line x1="10" y1="3" x2="10" y2="17" strokeDasharray="2 1.6" />
+        <path d="M8.3 10h-3M6.8 8.4 5.2 10l1.6 1.6" />
+        <path d="M11.7 10h3M13.2 8.4 14.8 10l-1.6 1.6" />
+      </g>
+    </Svg>
+  )
+}
