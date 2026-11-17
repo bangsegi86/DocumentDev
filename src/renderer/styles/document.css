@@ -512,3 +512,74 @@
   pointer-events: none;
   height: 0;
 }
+
+/* ---- Print / PDF ----
+   The 3-pane screen layout (fixed-height window with its own scroll areas and
+   a contents sidebar) would print only the first screenful. For paper: one
+   flowing column, title bar on page 1, no sidebar/breadcrumb, colours kept,
+   and tables / code / figures kept from splitting awkwardly. Used by the
+   app's "Export PDF" / "Print" and by a browser printing the exported file. */
+@page {
+  size: A4;
+  margin: 16mm 14mm 18mm;
+}
+@media print {
+  html,
+  body {
+    height: auto !important;
+    overflow: visible !important;
+    background: #fff !important;
+  }
+  .doc-root,
+  .doc-layout,
+  .doc-main {
+    display: block !important;
+    height: auto !important;
+    overflow: visible !important;
+  }
+  .doc-sidebar,
+  .doc-breadcrumb,
+  .doc-sidebar-toggle {
+    display: none !important;
+  }
+  .doc-root {
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+  }
+  .doc-topbar {
+    border-radius: 4px;
+    padding: 14px 20px;
+    font-size: 20px;
+  }
+  .doc-content {
+    overflow: visible !important;
+    padding: 18px 0 0 !important;
+  }
+  .doc-content h1,
+  .doc-content h2,
+  .doc-content h3 {
+    break-after: avoid;
+    page-break-after: avoid;
+  }
+  .doc-content h1:not(:first-child) {
+    margin-top: 1.2em;
+  }
+  .doc-content tr,
+  .doc-content img,
+  .doc-content figure,
+  .doc-content pre,
+  .doc-content blockquote {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+  .doc-content pre {
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+  .doc-content a {
+    text-decoration: none;
+  }
+  .doc-content table {
+    font-size: 0.86em;
+  }
+}

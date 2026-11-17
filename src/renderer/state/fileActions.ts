@@ -65,17 +65,31 @@ export async function saveDocumentAs(editor: Editor): Promise<boolean> {
   return false
 }
 
+/** Save the document as an A4 PDF (same look as the exported page, laid out
+ *  for paper by the document's print styles). */
+export async function exportPdfDocument(editor: Editor): Promise<void> {
+  try {
+    const html = exportHtml(currentDocFile(editor))
+    await window.api.exportPdf(`${safeBaseName()}.pdf`, html, useDocumentStore.getState().lang)
+  } catch (e) {
+    window.alert(`${dict().exportFailed}\n${e instanceof Error ? e.message : String(e)}`)
+  }
+}
+
+/** Open the system print dialog for the document. */
+export async function printCurrentDocument(editor: Editor): Promise<void> {
+  try {
+    await window.api.print(exportHtml(currentDocFile(editor)))
+  } catch (e) {
+    window.alert(`${dict().exportFailed}\n${e instanceof Error ? e.message : String(e)}`)
+  }
+}
+
 export async function exportWordDocument(editor: Editor): Promise<void> {
   try {
-    if (typeof window.api?.saveWord !== 'function') {
-      window.alert(
-        'Word export is unavailable in this running instance.\nPlease restart the app (stop and re-run "npm run dev").'
-      )
-      return
-    }
     const doc = exportWord(currentDocFile(editor))
     await window.api.saveWord(`${safeBaseName()}.doc`, doc)
   } catch (e) {
-    window.alert('Word export failed: ' + (e instanceof Error ? e.message : String(e)))
+    window.alert(`${dict().exportFailed}\n${e instanceof Error ? e.message : String(e)}`)
   }
 }

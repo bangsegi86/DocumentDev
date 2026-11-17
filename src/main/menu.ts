@@ -13,6 +13,8 @@ const STRINGS: Record<Lang, Labels> = {
     save: '저장',
     saveAs: '다른 이름으로 저장…',
     exportWord: '워드로 내려받기…',
+    exportPdf: 'PDF로 내보내기…',
+    print: '인쇄…',
     recent: '최근 문서',
     noRecent: '최근 문서 없음',
     clearRecent: '목록 지우기',
@@ -38,6 +40,8 @@ const STRINGS: Record<Lang, Labels> = {
     save: 'Save',
     saveAs: 'Save As…',
     exportWord: 'Download as Word…',
+    exportPdf: 'Export as PDF…',
+    print: 'Print…',
     recent: 'Open Recent',
     noRecent: 'No recent documents',
     clearRecent: 'Clear Menu',
@@ -100,7 +104,10 @@ export async function buildMenu(): Promise<void> {
         { label: t.save, accelerator: 'CmdOrCtrl+S', click: () => send('save') },
         { label: t.saveAs, accelerator: 'CmdOrCtrl+Shift+S', click: () => send('saveAs') },
         { type: 'separator' },
+        { label: t.exportPdf, accelerator: 'CmdOrCtrl+Shift+E', click: () => send('exportPdf') },
         { label: t.exportWord, accelerator: 'CmdOrCtrl+Shift+W', click: () => send('exportWord') },
+        { type: 'separator' },
+        { label: t.print, accelerator: 'CmdOrCtrl+P', click: () => send('print') },
         { type: 'separator' },
         isMac ? { role: 'close' } : { label: t.quit, role: 'quit' }
       ]

@@ -73,6 +73,8 @@ export const IPC = {
   fileSave: 'file:save',
   fileSaveAs: 'file:saveAs',
   fileSaveWord: 'file:saveWord',
+  fileExportPdf: 'file:exportPdf',
+  filePrint: 'file:print',
   imageOpen: 'image:open',
   menuAction: 'menu:action',
   setMenuLang: 'menu:setLang',
@@ -100,6 +102,8 @@ export type MenuAction =
   | 'save'
   | 'saveAs'
   | 'exportWord'
+  | 'exportPdf'
+  | 'print'
   | 'find'
   | 'toggleSpellcheck'
   | 'toggleLang'
@@ -110,6 +114,10 @@ export interface DocApi {
   saveFile(path: string, contents: string, force?: boolean): Promise<SaveResult>
   saveFileAs(suggestedName: string, contents: string): Promise<SaveResult>
   saveWord(suggestedName: string, contents: string): Promise<SaveResult>
+  /** Render the exported HTML to an A4 PDF (asks where to save). */
+  exportPdf(suggestedName: string, html: string, lang: Lang): Promise<SaveResult>
+  /** Open the system print dialog for the exported HTML. */
+  print(html: string): Promise<boolean>
   openImage(): Promise<ImageResult>
   /** Absolute path of a File from a drag-and-drop (empty if unknown). */
   pathForFile(file: File): string

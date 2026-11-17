@@ -8,6 +8,8 @@ const api: DocApi = {
     ipcRenderer.invoke(IPC.fileSaveAs, suggestedName, contents),
   saveWord: (suggestedName, contents) =>
     ipcRenderer.invoke(IPC.fileSaveWord, suggestedName, contents),
+  exportPdf: (suggestedName, html, lang) => ipcRenderer.invoke(IPC.fileExportPdf, suggestedName, html, lang),
+  print: (html) => ipcRenderer.invoke(IPC.filePrint, html),
   openImage: () => ipcRenderer.invoke(IPC.imageOpen),
   pathForFile: (file: File) => webUtils.getPathForFile(file),
   setMenuLang: (lang: Lang) => ipcRenderer.send(IPC.setMenuLang, lang),

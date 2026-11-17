@@ -12,7 +12,13 @@ import { useDocumentStore } from './state/documentStore'
 import { TableContextMenu } from './editor/menus/TableContextMenu'
 import { ImageMenu } from './editor/menus/ImageMenu'
 import { FindReplaceBar } from './editor/menus/FindReplaceBar'
-import { saveDocument, saveDocumentAs, exportWordDocument } from './state/fileActions'
+import {
+  saveDocument,
+  saveDocumentAs,
+  exportWordDocument,
+  exportPdfDocument,
+  printCurrentDocument
+} from './state/fileActions'
 import { TabBar } from './TabBar'
 import { useTabsStore } from './state/tabsStore'
 import {
@@ -41,7 +47,17 @@ function baseName(path: string | null): string | null {
 }
 
 /** Export menu: secondary ways to write the document out. */
-function ExportMenu({ onSaveAs, onExportWord }: { onSaveAs: () => void; onExportWord: () => void }): JSX.Element {
+function ExportMenu({
+  onSaveAs,
+  onExportWord,
+  onExportPdf,
+  onPrint
+}: {
+  onSaveAs: () => void
+  onExportWord: () => void
+  onExportPdf: () => void
+  onPrint: () => void
+}): JSX.Element {
   const { t } = useI18n()
   const [open, setOpen] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
@@ -79,10 +95,19 @@ function ExportMenu({ onSaveAs, onExportWord }: { onSaveAs: () => void; onExport
       </button>
       {open && (
         <div className="bar-menu" role="menu">
+          <button type="button" role="menuitem" className="bar-menu-item" onClick={pick(onExportPdf)}>
+            {t('exportPdfItem')}
+            <kbd>Ctrl+Shift+E</kbd>
+          </button>
           <button type="button" role="menuitem" className="bar-menu-item" onClick={pick(onExportWord)}>
             {t('exportWordItem')}
             <kbd>Ctrl+Shift+W</kbd>
           </button>
+          <button type="button" role="menuitem" className="bar-menu-item" onClick={pick(onPrint)}>
+            {t('printItem')}
+            <kbd>Ctrl+P</kbd>
+          </button>
+          <div className="bar-menu-divider" />
           <button type="button" role="menuitem" className="bar-menu-item" onClick={pick(onSaveAs)}>
             {t('saveAsItem')}
             <kbd>Ctrl+Shift+S</kbd>
@@ -204,8 +229,12 @@ function AppHeader({
   onOpenPath,
   onSave,
   onSaveAs,
-  onExportWord
+  onExportWord,
+  onExportPdf,
+  onPrint
 }: {
+  onExportPdf: () => void
+  onPrint: () => void
   onNew: () => void
   onOpen: () => void
   onOpenPath: (path: string) => void
@@ -238,7 +267,7 @@ function AppHeader({
         </button>
         <OpenControl onOpen={onOpen} onOpenPath={onOpenPath} />
         <span className="bar-sep" />
-        <ExportMenu onSaveAs={onSaveAs} onExportWord={onExportWord} />
+        <ExportMenu onSaveAs={onSaveAs} onExportWord={onExportWord} onExportPdf={onExportPdf} onPrint={onPrint} />
         <button
           type="button"
           className={`bar-btn bar-btn-primary ${dirty ? 'is-dirty' : ''}`}
@@ -455,6 +484,8 @@ function Workbench(): JSX.Element {
       save: () => void saveActive(),
       saveAs: () => void saveDocumentAs(editor),
       exportWord: () => void exportWordDocument(editor),
+      exportPdf: () => void exportPdfDocument(editor),
+      print: () => void printCurrentDocument(editor),
       find: () => setShowFind(true),
       toggleLang,
       toggleSpellcheck: () => setSpellcheck((v) => !v)
@@ -541,6 +572,8 @@ function Workbench(): JSX.Element {
         onSave={() => void saveActive()}
         onSaveAs={() => void saveDocumentAs(editor)}
         onExportWord={() => void exportWordDocument(editor)}
+        onExportPdf={() => void exportPdfDocument(editor)}
+        onPrint={() => void printCurrentDocument(editor)}
       />
       <TabBar
         onSelect={(id) => activateTab(editor, id)}
