@@ -131,5 +131,12 @@ export const ko = {
   themeBody: '본문',
   themeTablesCode: '표 · 코드',
   closePanel: '닫기',
+  recentDocs: '최근 문서',
+  noRecentDocs: '최근에 연 문서가 없습니다.',
+  clearRecentDocs: '목록 지우기',
+  openOther: '다른 문서 열기…',
+  fileChangedOnDisk: '다른 프로그램에서 이 파일을 변경했습니다.\n\n지금 내용으로 덮어쓰면 그 변경사항은 사라집니다. 덮어쓸까요?',
+  fileMissing: '파일을 찾을 수 없습니다. 이동되었거나 삭제되었을 수 있습니다.',
+  notDocDevFile: '이 파일에는 DocumentDev 편집 데이터가 없어 편집할 수 없습니다.\n(DocumentDev로 저장한 .html 파일만 열 수 있습니다.)',
   bodyContentPlaceholder: '여기에 문서 내용을 작성하세요. 위 툴바로 제목·표·코드 블록·이미지를 삽입할 수 있습니다.'
 } as const

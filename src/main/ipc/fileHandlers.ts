@@ -7,6 +7,7 @@ import {
   saveWordDialog,
   openImageDialog
 } from './dialogs'
+import { getRecent, readDocument, clearRecent } from '../docFiles'
 
 export function registerFileHandlers(): void {
   ipcMain.handle(IPC.fileOpen, (event) => {
@@ -14,9 +15,13 @@ export function registerFileHandlers(): void {
     return openFileDialog(win)
   })
 
-  ipcMain.handle(IPC.fileSave, (_event, path: string, contents: string) => {
-    return saveFile(path, contents)
+  ipcMain.handle(IPC.fileSave, (_event, path: string, contents: string, force?: boolean) => {
+    return saveFile(path, contents, force === true)
   })
+
+  ipcMain.handle(IPC.recentList, () => getRecent())
+  ipcMain.handle(IPC.recentOpen, (_event, path: string) => readDocument(path))
+  ipcMain.handle(IPC.recentClear, () => clearRecent())
 
   ipcMain.handle(IPC.fileSaveAs, (event, suggestedName: string, contents: string) => {
     const win = BrowserWindow.fromWebContents(event.sender)!

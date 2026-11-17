@@ -234,6 +234,64 @@ select {
 .bar-menu-item:hover {
   background: var(--hover);
 }
+.bar-split {
+  display: inline-flex;
+  align-items: center;
+}
+.bar-split-caret {
+  width: 20px;
+  margin-left: -2px;
+}
+.bar-split-caret.open {
+  background: var(--hover);
+}
+.bar-menu-left {
+  left: 0;
+  right: auto;
+}
+.bar-menu-recent {
+  width: 340px;
+}
+.bar-menu-heading {
+  padding: 8px 10px 4px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--muted);
+}
+.bar-menu-empty {
+  padding: 6px 10px 10px;
+  color: var(--muted);
+}
+.bar-menu-divider {
+  height: 1px;
+  margin: 4px 6px;
+  background: var(--line);
+}
+.bar-menu-file {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 1px;
+}
+.bar-menu-file-name {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 500;
+}
+.bar-menu-file-dir {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  direction: rtl;
+  text-align: left;
+  font-size: 11.5px;
+  color: var(--muted);
+}
+.bar-menu-subtle {
+  color: var(--muted);
+}
 .bar-menu-item kbd {
   font: 11.5px var(--ui-font);
   color: var(--muted);

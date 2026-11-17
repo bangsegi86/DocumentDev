@@ -1,11 +1,11 @@
 import type { Editor } from '@tiptap/react'
 import { createDocument, type JSONContent } from '@tiptap/core'
 import { EditorState } from '@tiptap/pm/state'
-import type { DocFile, Lang, ThemeSettings } from '@shared/types'
+import type { DocFile, Lang, OpenResult, ThemeSettings } from '@shared/types'
 import { extractPayload } from '@shared/fileFormat'
 import { useDocumentStore } from './documentStore'
 import { useTabsStore, tabDocJSON, type TabRecord } from './tabsStore'
-import { saveDocumentAs } from './fileActions'
+import { saveDocumentAs, writeDocumentFile, dict } from './fileActions'
 import { exportHtml } from '../export/exportHtml'
 import { defaultTheme } from '../theme/defaultTheme'
 import { ko } from '../i18n/ko'
@@ -128,10 +128,16 @@ export function newTab(editor: Editor): void {
 /** Open a file. Reuses the active tab if it's a pristine, empty "Untitled". */
 export async function openTab(
   editor: Editor,
-  given?: { path: string | null; contents: string }
+  given?: { path?: string | null; contents?: string; error?: string }
 ): Promise<void> {
-  const res = given ? { canceled: false, ...given } : await window.api.openFile()
-  if (res.canceled || !res.contents) return
+  const res: OpenResult = given
+    ? { canceled: false, path: given.path ?? undefined, contents: given.contents, error: given.error }
+    : await window.api.openFile()
+  if (res.canceled) return
+  if (res.error || res.contents === undefined) {
+    window.alert(dict().fileMissing)
+    return
+  }
   // Already open? Just switch to that tab instead of opening a duplicate.
   const { tabs, activeId } = useTabsStore.getState()
   const livePath = useDocumentStore.getState().filePath
@@ -143,7 +149,7 @@ export async function openTab(
   }
   const payload = extractPayload(res.contents)
   if (!payload) {
-    window.alert('This file was not created by DocumentDev (no editable data found).')
+    window.alert(dict().notDocDevFile)
     return
   }
   const ds = useDocumentStore.getState()
@@ -297,8 +303,7 @@ export async function saveAllTabs(editor: Editor): Promise<boolean> {
         theme: tab.theme,
         tiptapDoc: tabDocJSON(tab) ?? { type: 'doc', content: [{ type: 'paragraph' }] }
       }
-      const res = await window.api.saveFile(tab.filePath, exportHtml(docFile))
-      if (res.canceled) return false
+      if (!(await writeDocumentFile(tab.filePath, exportHtml(docFile)))) return false
       useTabsStore.getState().update(tab.id, { dirty: false })
       if (tab.id === activeId) useDocumentStore.getState().markClean()
       dropRecovery(tab.id)

@@ -1,5 +1,7 @@
 import { Menu, BrowserWindow, app } from 'electron'
 import { IPC, type Lang, type MenuAction } from '../shared/types'
+import { getRecent, clearRecent } from './docFiles'
+import { openInApp } from './openQueue'
 
 type Labels = Record<string, string>
 
@@ -11,6 +13,9 @@ const STRINGS: Record<Lang, Labels> = {
     save: '저장',
     saveAs: '다른 이름으로 저장…',
     exportWord: '워드로 내려받기…',
+    recent: '최근 문서',
+    noRecent: '최근 문서 없음',
+    clearRecent: '목록 지우기',
     quit: '종료',
     view: '보기',
     spellcheck: '맞춤법 검사',
@@ -33,6 +38,9 @@ const STRINGS: Record<Lang, Labels> = {
     save: 'Save',
     saveAs: 'Save As…',
     exportWord: 'Download as Word…',
+    recent: 'Open Recent',
+    noRecent: 'No recent documents',
+    clearRecent: 'Clear Menu',
     quit: 'Quit',
     view: 'View',
     spellcheck: 'Spell Check',
@@ -59,9 +67,27 @@ function send(action: MenuAction): void {
   win?.webContents.send(IPC.menuAction, action)
 }
 
-export function buildMenu(lang: Lang): void {
-  const t = STRINGS[lang]
+let currentLang: Lang = 'ko'
+
+/** Switch the menu language (rebuilds the menu). */
+export function setMenuLang(lang: Lang): void {
+  currentLang = lang
+  void buildMenu()
+}
+
+/** (Re)build the application menu, including the current recent-documents list. */
+export async function buildMenu(): Promise<void> {
+  const t = STRINGS[currentLang]
   const isMac = process.platform === 'darwin'
+  const recent = await getRecent()
+  const recentItems: Electron.MenuItemConstructorOptions[] =
+    recent.length === 0
+      ? [{ label: t.noRecent, enabled: false }]
+      : [
+          ...recent.map((p) => ({ label: p, click: () => openInApp(p) })),
+          { type: 'separator' as const },
+          { label: t.clearRecent, click: () => void clearRecent() }
+        ]
 
   const template: Electron.MenuItemConstructorOptions[] = [
     {
@@ -69,6 +95,7 @@ export function buildMenu(lang: Lang): void {
       submenu: [
         { label: t.new, accelerator: 'CmdOrCtrl+N', click: () => send('new') },
         { label: t.open, accelerator: 'CmdOrCtrl+O', click: () => send('open') },
+        { label: t.recent, submenu: recentItems },
         { type: 'separator' },
         { label: t.save, accelerator: 'CmdOrCtrl+S', click: () => send('save') },
         { label: t.saveAs, accelerator: 'CmdOrCtrl+Shift+S', click: () => send('saveAs') },

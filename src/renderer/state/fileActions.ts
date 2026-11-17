@@ -4,6 +4,26 @@ import { FILE_EXTENSION } from '@shared/constants'
 import { useDocumentStore } from './documentStore'
 import { exportHtml } from '../export/exportHtml'
 import { exportWord } from '../export/exportWord'
+import { ko } from '../i18n/ko'
+import { en } from '../i18n/en'
+
+/** The UI dictionary for the current language (for confirm/alert text). */
+export function dict(): typeof ko {
+  return useDocumentStore.getState().lang === 'ko' ? ko : (en as unknown as typeof ko)
+}
+
+/**
+ * Write a document to `path`. If another program changed the file since it
+ * was opened/saved, ask before overwriting. @returns true if written.
+ */
+export async function writeDocumentFile(path: string, html: string): Promise<boolean> {
+  let res = await window.api.saveFile(path, html)
+  if (res.conflict) {
+    if (!window.confirm(dict().fileChangedOnDisk)) return false
+    res = await window.api.saveFile(path, html, true)
+  }
+  return !res.canceled
+}
 
 function currentDocFile(editor: Editor): DocFile {
   const { title, lang, theme } = useDocumentStore.getState()
@@ -26,8 +46,7 @@ export async function saveDocument(editor: Editor): Promise<boolean> {
   if (!filePath) {
     return saveDocumentAs(editor)
   }
-  const res = await window.api.saveFile(filePath, html)
-  if (!res.canceled) {
+  if (await writeDocumentFile(filePath, html)) {
     useDocumentStore.getState().markClean()
     return true
   }

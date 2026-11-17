@@ -129,5 +129,12 @@ export const en: Record<keyof typeof ko, string> = {
   themeBody: 'Body',
   themeTablesCode: 'Tables & code',
   closePanel: 'Close',
+  recentDocs: 'Recent documents',
+  noRecentDocs: 'No recently opened documents.',
+  clearRecentDocs: 'Clear list',
+  openOther: 'Open another document…',
+  fileChangedOnDisk: 'Another program changed this file.\n\nSaving now will overwrite those changes. Overwrite?',
+  fileMissing: 'The file could not be found. It may have been moved or deleted.',
+  notDocDevFile: 'This file has no DocumentDev editing data, so it cannot be edited.\n(Only .html files saved by DocumentDev can be opened.)',
   bodyContentPlaceholder: 'Write your document here. Use the toolbar above to insert headings, tables, code blocks and images.'
 }

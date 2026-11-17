@@ -3,6 +3,7 @@ import { join } from 'path'
 import { APP_NAME } from '../shared/constants'
 import { IPC, type Lang } from '../shared/types'
 import { clearRecovery } from './ipc/recoveryHandlers'
+import { markRendererNotReady } from './openQueue'
 
 // Tracked across the window's lifetime to guard against losing unsaved work.
 let dirty = false
@@ -29,6 +30,7 @@ export function createWindow(): BrowserWindow {
   // Fresh window starts clean; the renderer re-reports dirty state on mount.
   dirty = false
   forceClose = false
+  markRendererNotReady()
 
   const win = new BrowserWindow({
     width: 1400,

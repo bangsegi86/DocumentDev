@@ -93,15 +93,122 @@ function ExportMenu({ onSaveAs, onExportWord }: { onSaveAs: () => void; onExport
   )
 }
 
+/** Split "open" control: the folder button opens the file dialog; the caret
+ *  lists recent documents. */
+function OpenControl({ onOpen, onOpenPath }: { onOpen: () => void; onOpenPath: (path: string) => void }): JSX.Element {
+  const { t } = useI18n()
+  const [open, setOpen] = useState(false)
+  const [recent, setRecent] = useState<string[]>([])
+  const ref = useRef<HTMLDivElement>(null)
+  useEffect(() => {
+    if (!open) return
+    void window.api.recentList().then(setRecent)
+    const onDoc = (e: MouseEvent): void => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false)
+    }
+    const onKey = (e: KeyboardEvent): void => {
+      if (e.key === 'Escape') setOpen(false)
+    }
+    document.addEventListener('mousedown', onDoc)
+    document.addEventListener('keydown', onKey)
+    return () => {
+      document.removeEventListener('mousedown', onDoc)
+      document.removeEventListener('keydown', onKey)
+    }
+  }, [open])
+  const split = (p: string): { name: string; dir: string } => {
+    const i = Math.max(p.lastIndexOf('/'), p.lastIndexOf('\\'))
+    return { name: p.slice(i + 1), dir: p.slice(0, i) }
+  }
+  return (
+    <div className="bar-menu-host bar-split" ref={ref}>
+      <button type="button" className="bar-icon-btn" onClick={onOpen} title={`${t('open')} (Ctrl+O)`} aria-label={t('open')}>
+        <Icon name="folderOpen" />
+      </button>
+      <button
+        type="button"
+        className={`bar-icon-btn bar-split-caret ${open ? 'open' : ''}`}
+        onClick={() => setOpen((v) => !v)}
+        title={t('recentDocs')}
+        aria-label={t('recentDocs')}
+        aria-haspopup="menu"
+        aria-expanded={open}
+      >
+        <Icon name="chevronDown" size={14} />
+      </button>
+      {open && (
+        <div className="bar-menu bar-menu-left bar-menu-recent" role="menu">
+          <div className="bar-menu-heading">{t('recentDocs')}</div>
+          {recent.length === 0 ? (
+            <div className="bar-menu-empty">{t('noRecentDocs')}</div>
+          ) : (
+            recent.map((p) => {
+              const { name, dir } = split(p)
+              return (
+                <button
+                  key={p}
+                  type="button"
+                  role="menuitem"
+                  className="bar-menu-item bar-menu-file"
+                  title={p}
+                  onClick={() => {
+                    setOpen(false)
+                    onOpenPath(p)
+                  }}
+                >
+                  <span className="bar-menu-file-name">{name}</span>
+                  <span className="bar-menu-file-dir">
+                    {/* rtl container puts the ellipsis at the start of a long
+                        path; bdi keeps the path itself in normal order. */}
+                    <bdi>{dir}</bdi>
+                  </span>
+                </button>
+              )
+            })
+          )}
+          <div className="bar-menu-divider" />
+          <button
+            type="button"
+            role="menuitem"
+            className="bar-menu-item"
+            onClick={() => {
+              setOpen(false)
+              onOpen()
+            }}
+          >
+            {t('openOther')}
+            <kbd>Ctrl+O</kbd>
+          </button>
+          {recent.length > 0 && (
+            <button
+              type="button"
+              role="menuitem"
+              className="bar-menu-item bar-menu-subtle"
+              onClick={() => {
+                void window.api.clearRecent()
+                setRecent([])
+              }}
+            >
+              {t('clearRecentDocs')}
+            </button>
+          )}
+        </div>
+      )}
+    </div>
+  )
+}
+
 function AppHeader({
   onNew,
   onOpen,
+  onOpenPath,
   onSave,
   onSaveAs,
   onExportWord
 }: {
   onNew: () => void
   onOpen: () => void
+  onOpenPath: (path: string) => void
   onSave: () => void
   onSaveAs: () => void
   onExportWord: () => void
@@ -129,9 +236,7 @@ function AppHeader({
         <button type="button" className="bar-icon-btn" onClick={onNew} title={`${t('newDoc')} (Ctrl+N)`} aria-label={t('newDoc')}>
           <Icon name="filePlus" />
         </button>
-        <button type="button" className="bar-icon-btn" onClick={onOpen} title={`${t('open')} (Ctrl+O)`} aria-label={t('open')}>
-          <Icon name="folderOpen" />
-        </button>
+        <OpenControl onOpen={onOpen} onOpenPath={onOpenPath} />
         <span className="bar-sep" />
         <ExportMenu onSaveAs={onSaveAs} onExportWord={onExportWord} />
         <button
@@ -390,7 +495,13 @@ function Workbench(): JSX.Element {
   useEffect(() => {
     if (!editor) return
     initTabs(editor)
-    void maybeRestoreRecovery(editor)
+    let off = (): void => {}
+    void maybeRestoreRecovery(editor).then(() => {
+      // Documents handed over by the OS ("Open with", recent menu) open as tabs.
+      off = window.api.onOpenFromOS((res) => void openTab(editor, res))
+      window.api.rendererReady()
+    })
+    return () => off()
   }, [editor])
 
   // Periodic crash-recovery autosave. Cheap when idle: it only serializes a
@@ -426,6 +537,7 @@ function Workbench(): JSX.Element {
       <AppHeader
         onNew={() => newTab(editor)}
         onOpen={() => void openTab(editor)}
+        onOpenPath={(p) => void window.api.openRecent(p).then((res) => openTab(editor, res))}
         onSave={() => void saveActive()}
         onSaveAs={() => void saveDocumentAs(editor)}
         onExportWord={() => void exportWordDocument(editor)}

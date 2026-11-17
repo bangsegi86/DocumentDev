@@ -48,12 +48,17 @@ export interface OpenResult {
   canceled: boolean
   path?: string
   contents?: string
+  /** Set when the file could not be read (e.g. 'ENOENT' — moved or deleted). */
+  error?: string
 }
 
 /** Result of a save/saveAs operation. */
 export interface SaveResult {
   canceled: boolean
   path?: string
+  /** The file was changed on disk by another program since it was opened or
+   *  last saved; nothing was written. Retry with force to overwrite. */
+  conflict?: boolean
 }
 
 /** Result of picking an image file (returned as a base64 data URI). */
@@ -79,7 +84,13 @@ export const IPC = {
   recoveryWrite: 'recovery:write',
   recoveryDelete: 'recovery:delete',
   recoveryList: 'recovery:list',
-  recoveryClear: 'recovery:clear'
+  recoveryClear: 'recovery:clear',
+  // Recent documents / documents opened by the OS ("Open with", menu).
+  recentList: 'recent:list',
+  recentOpen: 'recent:open',
+  recentClear: 'recent:clear',
+  openFromOS: 'file:openFromOS',
+  rendererReady: 'app:rendererReady'
 } as const
 
 /** Actions the native menu can dispatch into the renderer. */
@@ -96,7 +107,7 @@ export type MenuAction =
 /** API surface exposed to the renderer via the preload contextBridge. */
 export interface DocApi {
   openFile(): Promise<OpenResult>
-  saveFile(path: string, contents: string): Promise<SaveResult>
+  saveFile(path: string, contents: string, force?: boolean): Promise<SaveResult>
   saveFileAs(suggestedName: string, contents: string): Promise<SaveResult>
   saveWord(suggestedName: string, contents: string): Promise<SaveResult>
   openImage(): Promise<ImageResult>
@@ -114,4 +125,12 @@ export interface DocApi {
   recoveryDelete(id: string): Promise<void>
   recoveryList(): Promise<string[]>
   recoveryClear(): Promise<void>
+  /** Recent documents, newest first. */
+  recentList(): Promise<string[]>
+  openRecent(path: string): Promise<OpenResult>
+  clearRecent(): Promise<void>
+  /** Documents the OS / native menu asks to open (Open with, recent menu). */
+  onOpenFromOS(handler: (res: OpenResult) => void): () => void
+  /** Tell the main process the editor is ready to receive documents. */
+  rendererReady(): void
 }

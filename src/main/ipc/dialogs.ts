@@ -2,6 +2,7 @@ import { dialog, BrowserWindow } from 'electron'
 import { readFile, writeFile } from 'fs/promises'
 import { extname } from 'path'
 import { FILE_EXTENSION } from '../../shared/constants'
+import { readDocument, writeDocument } from '../docFiles'
 import type { OpenResult, SaveResult, ImageResult } from '../../shared/types'
 
 const FILTERS = [{ name: 'HTML Document', extensions: [FILE_EXTENSION] }]
@@ -36,14 +37,11 @@ export async function openFileDialog(win: BrowserWindow): Promise<OpenResult> {
     properties: ['openFile']
   })
   if (canceled || filePaths.length === 0) return { canceled: true }
-  const path = filePaths[0]
-  const contents = await readFile(path, 'utf-8')
-  return { canceled: false, path, contents }
+  return readDocument(filePaths[0])
 }
 
-export async function saveFile(path: string, contents: string): Promise<SaveResult> {
-  await writeFile(path, contents, 'utf-8')
-  return { canceled: false, path }
+export async function saveFile(path: string, contents: string, force = false): Promise<SaveResult> {
+  return writeDocument(path, contents, force)
 }
 
 export async function saveFileAsDialog(
@@ -57,8 +55,8 @@ export async function saveFileAsDialog(
     filters: FILTERS
   })
   if (canceled || !filePath) return { canceled: true }
-  await writeFile(filePath, contents, 'utf-8')
-  return { canceled: false, path: filePath }
+  // The user picked this path in the dialog (and confirmed any overwrite).
+  return writeDocument(filePath, contents, true)
 }
 
 export async function saveWordDialog(

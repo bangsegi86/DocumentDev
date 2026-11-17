@@ -1,9 +1,9 @@
 import { contextBridge, ipcRenderer, webUtils } from 'electron'
-import { IPC, type DocApi, type Lang, type MenuAction } from '../shared/types'
+import { IPC, type DocApi, type Lang, type MenuAction, type OpenResult } from '../shared/types'
 
 const api: DocApi = {
   openFile: () => ipcRenderer.invoke(IPC.fileOpen),
-  saveFile: (path, contents) => ipcRenderer.invoke(IPC.fileSave, path, contents),
+  saveFile: (path, contents, force) => ipcRenderer.invoke(IPC.fileSave, path, contents, force),
   saveFileAs: (suggestedName, contents) =>
     ipcRenderer.invoke(IPC.fileSaveAs, suggestedName, contents),
   saveWord: (suggestedName, contents) =>
@@ -26,7 +26,16 @@ const api: DocApi = {
   recoveryWrite: (id: string, json: string) => ipcRenderer.invoke(IPC.recoveryWrite, id, json),
   recoveryDelete: (id: string) => ipcRenderer.invoke(IPC.recoveryDelete, id),
   recoveryList: () => ipcRenderer.invoke(IPC.recoveryList),
-  recoveryClear: () => ipcRenderer.invoke(IPC.recoveryClear)
+  recoveryClear: () => ipcRenderer.invoke(IPC.recoveryClear),
+  recentList: () => ipcRenderer.invoke(IPC.recentList),
+  openRecent: (path: string) => ipcRenderer.invoke(IPC.recentOpen, path),
+  clearRecent: () => ipcRenderer.invoke(IPC.recentClear),
+  onOpenFromOS: (handler) => {
+    const listener = (_e: unknown, res: OpenResult): void => handler(res)
+    ipcRenderer.on(IPC.openFromOS, listener)
+    return () => ipcRenderer.removeListener(IPC.openFromOS, listener)
+  },
+  rendererReady: () => ipcRenderer.send(IPC.rendererReady)
 }
 
 contextBridge.exposeInMainWorld('api', api)
