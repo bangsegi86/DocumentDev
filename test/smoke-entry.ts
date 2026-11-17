@@ -1,6 +1,9 @@
 import { exportHtml } from '../src/renderer/export/exportHtml'
 import { exportWord } from '../src/renderer/export/exportWord'
 import { extractPayload } from '../src/shared/fileFormat'
+import { getSchema } from '@tiptap/core'
+import { buildExtensions } from '../src/renderer/editor/extensions'
+import { readFileSync } from 'node:fs'
 import { deriveToc } from '../src/renderer/toc/toc'
 import { defaultTheme } from '../src/renderer/theme/defaultTheme'
 import type { DocFile } from '../src/shared/types'
@@ -200,6 +203,49 @@ const themeBlock = evilHtml.slice(evilHtml.lastIndexOf('--doc-topbar-bg:'))
 assert(themeBlock.slice(0, themeBlock.indexOf('}')).includes('--doc-font-size:'), 'theme values cannot close the variable block early (no injected CSS rules)')
 const evilWord = exportWord(evil)
 assert((evilWord.match(/<\/style>/g) || []).length === 1 && !/alert\(1\)<\/script>/.test(evilWord), 'theme values cannot inject into Word export')
+
+// ---- Payload size (B2/B3) ----
+{
+  const schema = getSchema(buildExtensions({ forExport: true }))
+  const sameDoc = (a: unknown, b: unknown): boolean =>
+    schema.nodeFromJSON(a as object).eq(schema.nodeFromJSON(b as object))
+
+  // B2: the real sample (an older version-1 file) re-saves smaller and identical.
+  const sampleHtml = readFileSync('sampleDoc/아성다이소 세종허브센터 Dipas Interface Doc.html', 'utf8')
+  const sample = extractPayload(sampleHtml)!
+  assert(!!sample && sample.version === 1, 'old version-1 sample file still opens')
+  const resaved = exportHtml(sample)
+  const reopened = extractPayload(resaved)!
+  assert(sameDoc(sample.tiptapDoc, reopened.tiptapDoc), 'sample: re-saved document is identical after reopening')
+  const payloadLen = (h: string): number => h.length - h.indexOf('id="docdev-data"')
+  console.log(`    sample payload ${payloadLen(sampleHtml)} -> ${payloadLen(resaved)} chars`)
+  assert(payloadLen(resaved) < payloadLen(sampleHtml) * 0.7, 'sample: embedded payload at least 30% smaller')
+  assert(!resaved.includes('"backgroundColor":null'), 'default-valued attributes are not stored')
+
+  // B3: each embedded image is stored once; refs resolve on reopen (incl. a
+  // repeated image and the top-bar logo).
+  const img2 = 'data:image/png;base64,' + Buffer.from('second-image-bytes').toString('base64')
+  const imgUri = `data:image/png;base64,${b64}`
+  const dupDoc = {
+    type: 'doc',
+    content: [
+      { type: 'image', attrs: { src: imgUri, caption: 'one' } },
+      { type: 'paragraph', content: [{ type: 'text', text: 'between' }] },
+      { type: 'image', attrs: { src: img2 } },
+      { type: 'image', attrs: { src: imgUri, width: 120 } },
+      { type: 'image', attrs: { src: 'https://example.com/remote.png' } }
+    ]
+  }
+  const dupFile: DocFile = { version: 1, title: 'Dup', lang: 'ko', theme: { ...defaultTheme, logoDataUrl: img2 }, tiptapDoc: dupDoc }
+  const dupHtml = exportHtml(dupFile)
+  const count = (h: string, x: string): number => h.split(x).length - 1
+  const visibleImgs = count(dupHtml.slice(0, dupHtml.indexOf('id="docdev-data"')), b64)
+  assert(count(dupHtml, b64) === visibleImgs, 'image bytes are not duplicated into the payload')
+  const dupBack = extractPayload(dupHtml)!
+  assert(dupBack.version === 1 && sameDoc(dupDoc, dupBack.tiptapDoc), 'image references resolve back to the exact images')
+  assert(dupBack.theme.logoDataUrl === img2, 'logo image reference resolves')
+  assert(dupBack.tiptapDoc.content![4].attrs!.src === 'https://example.com/remote.png', 'remote image URLs are kept as is')
+}
 
 import { writeFileSync } from 'node:fs'
 writeFileSync('out/sample.html', html, 'utf-8')

@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { useDocumentStore } from '../state/documentStore'
 import { useI18n } from '../i18n/I18nContext'
 import { FONT_OPTIONS } from './defaultTheme'
+import { downscaleDataUri, MAX_LOGO_WIDTH } from '../lib/downscaleImage'
 import { ColorField, PRESET_COLORS } from './ColorField'
 import type { ThemeSettings } from '@shared/types'
 
@@ -129,7 +130,9 @@ export function ThemePanel(): JSX.Element {
 
   const pickLogo = async (): Promise<void> => {
     const res = await window.api.openImage()
-    if (!res.canceled && res.dataUri) setTheme({ logoDataUrl: res.dataUri })
+    if (!res.canceled && res.dataUri) {
+      setTheme({ logoDataUrl: await downscaleDataUri(res.dataUri, MAX_LOGO_WIDTH) })
+    }
   }
 
   const headings = [

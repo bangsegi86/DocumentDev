@@ -6,7 +6,8 @@ import { themeToCss } from '../theme/themeToCss'
 import { deriveToc } from '../toc/toc'
 import { highlightCodeBlocks } from '../lib/highlighter'
 import { inlineColors } from './inlineColors'
-import { encodePayload } from '@shared/fileFormat'
+import { encodePayload, packImages, collectDataImages } from '@shared/fileFormat'
+import { compactDoc } from './compactDoc'
 import { renderDocumentHtml, escapeHtml } from './template'
 
 /** Build the nested <ul> sidebar markup from the document's headings. */
@@ -37,15 +38,24 @@ export function exportHtml(docFile: DocFile): string {
   )
   const tocHtml = buildTocHtml(doc)
   const themeCss = themeToCss(docFile.theme, '.doc-root')
-  const payloadJson = encodePayload(docFile)
 
-  return renderDocumentHtml({
+  // Assemble the visible document first (with a placeholder where the payload
+  // goes), so the payload can reference images that page already contains.
+  const shell = renderDocumentHtml({
     title: docFile.title || docFile.theme.titleText,
     lang: docFile.lang,
     logoDataUrl: docFile.theme.logoDataUrl || '',
     themeCss,
     tocHtml,
     bodyHtml,
-    payloadJson
+    payloadJson: PAYLOAD_PLACEHOLDER
   })
+  const at = shell.lastIndexOf(PAYLOAD_PLACEHOLDER)
+  const compact: DocFile = { ...docFile, tiptapDoc: compactDoc(doc) }
+  const payload = packImages(compact, collectDataImages(shell.slice(0, at)))
+  return shell.slice(0, at) + encodePayload(payload) + shell.slice(at + PAYLOAD_PLACEHOLDER.length)
 }
+
+/** Stand-in for the payload while the page is assembled (spliced by index, so
+ *  the same text typed in the document body can't be confused with it). */
+const PAYLOAD_PLACEHOLDER = '\u0000DOCDEV_PAYLOAD\u0000'

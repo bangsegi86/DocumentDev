@@ -6,6 +6,7 @@ import { TableGridPicker } from './TableGridPicker'
 import { PRESET_COLORS } from '../../theme/ColorField'
 import { addNumberColumn } from '../tableNumber'
 import { autoFitTable } from '../tableAutoFit'
+import { downscaleDataUri } from '../../lib/downscaleImage'
 import {
   InsertRowAbove,
   InsertRowBelow,
@@ -130,7 +131,9 @@ function ImageInsertControl({ editor }: { editor: Editor }): JSX.Element {
   const fromFile = async (): Promise<void> => {
     setOpen(false)
     const res = await window.api.openImage()
-    if (!res.canceled && res.dataUri) editor.chain().focus().setImage({ src: res.dataUri }).run()
+    if (res.canceled || !res.dataUri) return
+    const src = await downscaleDataUri(res.dataUri)
+    editor.chain().focus().setImage({ src }).run()
   }
   const fromUrl = (): void => {
     setOpen(false)

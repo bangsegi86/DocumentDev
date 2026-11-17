@@ -4,6 +4,7 @@ import { ReactNodeViewRenderer } from '@tiptap/react'
 import { Plugin } from '@tiptap/pm/state'
 import type { EditorView } from '@tiptap/pm/view'
 import { ImageNodeView } from './ImageNodeView'
+import { downscaleDataUri } from '../../lib/downscaleImage'
 
 function imageFiles(data: DataTransfer | null | undefined): File[] {
   return Array.from(data?.files ?? []).filter((f) => f.type.startsWith('image/'))
@@ -14,8 +15,9 @@ function imageFiles(data: DataTransfer | null | undefined): File[] {
 function insertImageFiles(view: EditorView, files: File[], pos?: number): void {
   files.forEach((file) => {
     const reader = new FileReader()
-    reader.onload = () => {
-      const node = view.state.schema.nodes.image.create({ src: reader.result as string })
+    reader.onload = async () => {
+      const src = await downscaleDataUri(reader.result as string)
+      const node = view.state.schema.nodes.image.create({ src })
       const { tr } = view.state
       if (pos === undefined) tr.replaceSelectionWith(node)
       else {

@@ -30,6 +30,7 @@ import {
 } from './state/tabsActions'
 import type { MenuAction } from '@shared/types'
 import { APP_NAME } from '@shared/constants'
+import { downscaleDataUri, MAX_LOGO_WIDTH } from './lib/downscaleImage'
 
 /** Shared SVG props for the 18px line icons used in the header. */
 const ICON = {
@@ -272,7 +273,8 @@ function Workbench(): JSX.Element {
   const pickLogo = async (): Promise<void> => {
     const res = await window.api.openImage()
     if (!res.canceled && res.dataUri) {
-      useDocumentStore.getState().setTheme({ logoDataUrl: res.dataUri })
+      const logo = await downscaleDataUri(res.dataUri, MAX_LOGO_WIDTH)
+      useDocumentStore.getState().setTheme({ logoDataUrl: logo })
     }
   }
 

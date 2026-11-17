@@ -34,7 +34,10 @@ export interface ThemeSettings {
 
 /** The complete editable document, embedded inside the exported .html as JSON. */
 export interface DocFile {
-  version: 1
+  /** 1 = self-contained payload; 2 = payload references images already in the
+   *  visible HTML (written only when the doc has embedded images). In memory
+   *  (after extractPayload) a document is always version 1. */
+  version: 1 | 2
   title: string
   lang: Lang
   theme: ThemeSettings
