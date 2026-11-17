@@ -22,6 +22,8 @@ import {
   closeTab,
   activateTab,
   autosaveRecovery,
+  noteEdit,
+  dropRecovery,
   anyTabDirty,
   saveAllTabs,
   maybeRestoreRecovery
@@ -227,7 +229,10 @@ function Workbench(): JSX.Element {
     shouldRerenderOnTransaction: false,
     // Spellcheck starts off; the toolbar toggle controls it (see effect below).
     editorProps: { attributes: { spellcheck: 'false' } },
-    onUpdate: () => markDirty()
+    onUpdate: () => {
+      markDirty()
+      noteEdit()
+    }
   })
 
   // Apply the spellcheck toggle to the editable surface.
@@ -275,7 +280,7 @@ function Workbench(): JSX.Element {
   const saveActive = async (): Promise<boolean> => {
     if (!editor) return false
     const saved = await saveDocument(editor)
-    if (saved) void window.api.recoveryDelete(useTabsStore.getState().activeId)
+    if (saved) dropRecovery(useTabsStore.getState().activeId)
     return saved
   }
 
@@ -305,12 +310,12 @@ function Workbench(): JSX.Element {
     void maybeRestoreRecovery(editor)
   }, [editor])
 
-  // Periodic crash-recovery autosave (only does work when something is dirty).
+  // Periodic crash-recovery autosave. Cheap when idle: it only serializes a
+  // tab whose content changed since its last snapshot, and waits for a pause
+  // in typing so a large document never stalls a keystroke.
   useEffect(() => {
     if (!editor) return
-    const timer = setInterval(() => {
-      if (anyTabDirty()) autosaveRecovery(editor)
-    }, 4000)
+    const timer = setInterval(() => autosaveRecovery(editor), 2000)
     return () => clearInterval(timer)
   }, [editor])
 

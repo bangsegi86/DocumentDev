@@ -126,7 +126,7 @@ export function closeTab(editor: Editor, id: string): void {
   const isDirty = id === activeId ? useDocumentStore.getState().dirty : rec.dirty
   if (isDirty && !confirmDiscard()) return
 
-  void window.api.recoveryDelete(id)
+  dropRecovery(id)
   const idx = tabs.findIndex((t) => t.id === id)
   const remaining = tabs.filter((t) => t.id !== id)
 
@@ -157,26 +157,62 @@ interface RecoveryDoc {
   savedAt: number
 }
 
-/** Write recovery snapshots for every dirty tab; drop them for clean ones. */
-export function autosaveRecovery(editor: Editor): void {
-  snapshotActive(editor)
-  const lang = useDocumentStore.getState().lang
-  for (const t of useTabsStore.getState().tabs) {
-    if (t.dirty) {
-      const payload: RecoveryDoc = {
-        id: t.id,
-        filePath: t.filePath,
-        title: t.title,
-        lang,
-        theme: t.theme,
-        tiptapDoc: t.doc,
-        savedAt: Date.now()
+/** Last thing written to (or removed from) the recovery store, per tab. Compared
+ *  by reference: ProseMirror docs and theme objects are immutable, so an
+ *  unchanged reference means "nothing new to write". */
+const recoveryWritten = new Map<string, { doc: unknown; theme: unknown; title: string } | 'clean'>()
+let lastEditAt = 0
+
+/** Record that the user just edited (autosave waits for a short idle gap). */
+export function noteEdit(): void {
+  lastEditAt = Date.now()
+}
+
+/**
+ * Write recovery snapshots for dirty tabs that changed since their last write,
+ * and drop them (once) for tabs that became clean. Skips while the user is
+ * actively typing so serializing a large doc never lands mid-keystroke.
+ * Does not touch the tabs store, so it never re-renders the UI.
+ */
+export function autosaveRecovery(editor: Editor, idleMs = 1500): void {
+  if (Date.now() - lastEditAt < idleMs) return
+  const ds = useDocumentStore.getState()
+  const { tabs, activeId } = useTabsStore.getState()
+  for (const t of tabs) {
+    const isActive = t.id === activeId
+    const dirty = isActive ? ds.dirty : t.dirty
+    const prev = recoveryWritten.get(t.id)
+    if (!dirty) {
+      if (prev !== 'clean') {
+        void window.api.recoveryDelete(t.id)
+        recoveryWritten.set(t.id, 'clean')
       }
-      void window.api.recoveryWrite(t.id, JSON.stringify(payload))
-    } else {
-      void window.api.recoveryDelete(t.id)
+      continue
     }
+    const sig = isActive
+      ? { doc: editor.state.doc, theme: ds.theme, title: ds.title }
+      : { doc: t.doc, theme: t.theme, title: t.title }
+    if (prev && prev !== 'clean' && prev.doc === sig.doc && prev.theme === sig.theme && prev.title === sig.title) {
+      continue
+    }
+    const payload: RecoveryDoc = {
+      id: t.id,
+      filePath: isActive ? ds.filePath : t.filePath,
+      title: sig.title,
+      lang: ds.lang,
+      theme: sig.theme,
+      tiptapDoc: isActive ? editor.getJSON() : t.doc,
+      savedAt: Date.now()
+    }
+    void window.api.recoveryWrite(t.id, JSON.stringify(payload))
+    recoveryWritten.set(t.id, sig)
   }
+}
+
+/** Forget a tab's recovery snapshot (after it was saved or closed). */
+export function dropRecovery(id: string): void {
+  void window.api.recoveryDelete(id)
+  recoveryWritten.set(id, 'clean')
 }
 
 /** True if any tab (active included) has unsaved changes. */
@@ -211,12 +247,12 @@ export async function saveAllTabs(editor: Editor): Promise<boolean> {
       if (res.canceled) return false
       useTabsStore.getState().update(tab.id, { dirty: false })
       if (tab.id === activeId) useDocumentStore.getState().markClean()
-      void window.api.recoveryDelete(tab.id)
+      dropRecovery(tab.id)
     } else {
       activateTab(editor, tab.id)
       const saved = await saveDocumentAs(editor)
       if (!saved) return false
-      void window.api.recoveryDelete(tab.id)
+      dropRecovery(tab.id)
       snapshotActive(editor)
     }
   }

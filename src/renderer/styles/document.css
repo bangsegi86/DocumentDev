@@ -330,6 +330,18 @@
 .doc-content .ProseMirror table {
   table-layout: fixed;
 }
+/* Editor only: skip rendering/painting top-level blocks that are scrolled out
+   of view. Without this every keystroke repaints the whole document, which made
+   long table-heavy docs stutter (measured ~45% lower keystroke latency on the
+   sample doc). `auto` remembers each block's real size once it has been shown,
+   so the scrollbar stays stable. Limited to tables and code blocks (the costly
+   parts, already clipped by their own overflow) so image resize handles that
+   poke outside their box are never cut off. */
+.doc-content .ProseMirror > .tableWrapper,
+.doc-content .ProseMirror > pre {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 240px;
+}
 .doc-content th,
 .doc-content td {
   border: 1px solid var(--doc-table-border);

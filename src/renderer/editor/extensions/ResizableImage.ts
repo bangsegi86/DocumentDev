@@ -68,7 +68,14 @@ export const ResizableImage = Image.extend({
       new Plugin({
         props: {
           handlePaste: (view, event) => {
-            const files = Array.from(event.clipboardData?.files ?? []).filter((f) =>
+            const data = event.clipboardData
+            // Excel/Word/PowerPoint put a bitmap snapshot of the copied range on
+            // the clipboard NEXT TO the real cell text. If there is any plain
+            // text, let the normal paste (incl. table-cell paste) handle it; an
+            // image-only clipboard (screenshot, image copied from a browser —
+            // which has HTML `<img>` but no text) is still embedded as base64.
+            if (data?.getData('text/plain').trim()) return false
+            const files = Array.from(data?.files ?? []).filter((f) =>
               f.type.startsWith('image/')
             )
             if (files.length === 0) return false

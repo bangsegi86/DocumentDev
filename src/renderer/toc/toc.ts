@@ -17,7 +17,7 @@ export function deriveTocFromDoc(doc: PMNode): TocItem[] {
   const items: TocItem[] = []
   const seen = new Map<string, number>()
   doc.descendants((node) => {
-    if (node.type.name !== 'heading') return
+    if (node.type.name !== 'heading') return !node.isTextblock
     const text = node.textContent
     let id = (node.attrs?.id as string | undefined) ?? ''
     if (!id) {

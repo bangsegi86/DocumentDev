@@ -39,7 +39,13 @@ export const HeadingWithId = Heading.extend({
           const updates: { pos: number; node: PMNode; id: string }[] = []
 
           newState.doc.descendants((node, pos) => {
-            if (node.type.name !== 'heading') return
+            if (node.type.name !== 'heading') {
+              // A non-heading textblock (paragraph, code block) can't contain a
+              // heading — don't walk its text nodes. Keeps this per-keystroke
+              // pass cheap on large docs; containers (tables, lists, quotes)
+              // are still searched since headings may live inside them.
+              return !node.isTextblock
+            }
             const base = slugify(node.textContent)
             const count = seen.get(base) ?? 0
             seen.set(base, count + 1)
