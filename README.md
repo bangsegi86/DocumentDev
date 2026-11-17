@@ -41,15 +41,26 @@ npm run test:e2e    # 실제 앱(Electron)을 띄워 편집·탭·붙여넣기·
 
 ## 빌드 / 배포본
 
+`npm run build`는 앱 코드를 `out/` 폴더로 컴파일만 합니다. **실행 파일(.exe)은 만들지 않습니다.**
+실행 파일과 설치본은 아래 `package` 명령으로 만들며, 결과물은 `release/` 폴더에 생깁니다.
+
 ```bash
-npm run build           # out/ 생성
-npm run package:win     # Windows 설치본 (nsis)
-npm run package:mac     # macOS dmg
-npm run package:linux   # Linux AppImage
+npm run package:win       # Windows: 설치 프로그램 .exe + 설치 없이 실행하는 portable .exe
+npm run package:portable  # Windows: portable .exe만
+npm run package:mac       # macOS: .dmg
+npm run package:linux     # Linux: .AppImage
 ```
 
-> 배포본(설치 파일)은 해당 OS에서 빌드하는 것이 가장 안정적입니다.
-> 예) Windows `.exe` 설치본은 Windows PC에서 `npm run package:win`으로 생성하세요.
+`npm run package:win` 결과물 (`release/` 폴더):
+
+| 파일 | 용도 |
+|---|---|
+| `DocumentDev Setup 0.1.0.exe` | 설치 프로그램 (설치 경로 선택 가능, 시작 메뉴 등록) |
+| `DocumentDev-0.1.0-portable.exe` | 설치 없이 더블클릭으로 바로 실행 |
+| `win-unpacked/DocumentDev.exe` | 압축 풀린 실행 폴더 (폴더째 복사해서 써도 됨) |
+
+> 배포본은 해당 OS에서 만드는 것이 가장 안정적입니다.
+> Windows용 `.exe`는 Windows PC에서 `npm install` 후 `npm run package:win`을 실행하세요.
 
 ## 기술 스택
 
