@@ -99,6 +99,8 @@ export interface DocApi {
   saveFileAs(suggestedName: string, contents: string): Promise<SaveResult>
   saveWord(suggestedName: string, contents: string): Promise<SaveResult>
   openImage(): Promise<ImageResult>
+  /** Absolute path of a File from a drag-and-drop (empty if unknown). */
+  pathForFile(file: File): string
   setMenuLang(lang: Lang): void
   onMenuAction(handler: (action: MenuAction) => void): () => void
   /** Tell the main process whether the document has unsaved changes. */

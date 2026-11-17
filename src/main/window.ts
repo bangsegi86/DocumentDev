@@ -16,6 +16,15 @@ ipcMain.on(IPC.setMenuLang, (_e, lang: Lang) => {
   dialogLang = lang
 })
 
+/** Only hand ordinary web and mail links to the OS. */
+export function isSafeExternalUrl(url: string): boolean {
+  try {
+    return ['http:', 'https:', 'mailto:'].includes(new URL(url).protocol)
+  } catch {
+    return false
+  }
+}
+
 export function createWindow(): BrowserWindow {
   // Fresh window starts clean; the renderer re-reports dirty state on mount.
   dirty = false
@@ -73,10 +82,19 @@ export function createWindow(): BrowserWindow {
     win.webContents.send(IPC.saveForClose)
   })
 
-  // Open external links in the system browser, never inside the app window.
+  // Open external links in the system browser, never inside the app window —
+  // and only web/mail links: file://, custom app protocols etc. are ignored.
   win.webContents.setWindowOpenHandler(({ url }) => {
-    shell.openExternal(url)
+    if (isSafeExternalUrl(url)) void shell.openExternal(url)
     return { action: 'deny' }
+  })
+
+  // Never let the app window navigate away from the editor (e.g. a file
+  // dropped outside the editable area, or a stray link): that would replace
+  // the UI and lose unsaved work. Dropped files are handled by the renderer.
+  win.webContents.on('will-navigate', (e, url) => {
+    const current = win.webContents.getURL()
+    if (url !== current) e.preventDefault()
   })
 
   if (process.env['ELECTRON_RENDERER_URL']) {

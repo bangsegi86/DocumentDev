@@ -30,13 +30,30 @@ export function themeToStyle(theme: ThemeSettings): CSSProperties {
 }
 
 /**
+ * Theme values come from the opened file and are pasted into a <style> block
+ * on export. Strip anything that could end the declaration or the style
+ * element (`;` `{` `}` `<` `>` `\`) so a tampered file can't inject CSS rules
+ * or a <script>. Legit colours/fonts never contain these characters.
+ */
+export function cssSafeTheme(theme: ThemeSettings): ThemeSettings {
+  const out = { ...theme } as Record<string, unknown>
+  for (const [k, v] of Object.entries(out)) {
+    if (k === 'logoDataUrl' || k === 'titleText') continue // HTML-escaped where used, not CSS
+    if (typeof v === 'string') out[k] = v.replace(/[;{}<>\\]/g, '')
+    else if (typeof v !== 'boolean') out[k] = String(v ?? '').replace(/[;{}<>\\]/g, '')
+  }
+  return out as unknown as ThemeSettings
+}
+
+/**
  * Convert theme settings into a `:root { --var: value }` block. The same set of
  * CSS variables is consumed by `document.css` in both the live editor preview
  * and the exported HTML, so theme changes are instantly WYSIWYG.
  *
  * @param selector CSS selector to scope the variables to (default `:root`).
  */
-export function themeToCss(theme: ThemeSettings, selector = ':root'): string {
+export function themeToCss(rawTheme: ThemeSettings, selector = ':root'): string {
+  const theme = cssSafeTheme(rawTheme)
   return `${selector} {
   --doc-topbar-bg: ${theme.topBarColor};
   --doc-topbar-fg: ${theme.topBarTextColor};

@@ -1,4 +1,4 @@
-import { contextBridge, ipcRenderer } from 'electron'
+import { contextBridge, ipcRenderer, webUtils } from 'electron'
 import { IPC, type DocApi, type Lang, type MenuAction } from '../shared/types'
 
 const api: DocApi = {
@@ -9,6 +9,7 @@ const api: DocApi = {
   saveWord: (suggestedName, contents) =>
     ipcRenderer.invoke(IPC.fileSaveWord, suggestedName, contents),
   openImage: () => ipcRenderer.invoke(IPC.imageOpen),
+  pathForFile: (file: File) => webUtils.getPathForFile(file),
   setMenuLang: (lang: Lang) => ipcRenderer.send(IPC.setMenuLang, lang),
   onMenuAction: (handler) => {
     const listener = (_e: unknown, action: MenuAction): void => handler(action)

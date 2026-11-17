@@ -2,7 +2,33 @@ import Image from '@tiptap/extension-image'
 import { mergeAttributes } from '@tiptap/core'
 import { ReactNodeViewRenderer } from '@tiptap/react'
 import { Plugin } from '@tiptap/pm/state'
+import type { EditorView } from '@tiptap/pm/view'
 import { ImageNodeView } from './ImageNodeView'
+
+function imageFiles(data: DataTransfer | null | undefined): File[] {
+  return Array.from(data?.files ?? []).filter((f) => f.type.startsWith('image/'))
+}
+
+/** Read image files as base64 data URIs (export stays self-contained) and
+ *  insert them at `pos`, or replace the current selection. */
+function insertImageFiles(view: EditorView, files: File[], pos?: number): void {
+  files.forEach((file) => {
+    const reader = new FileReader()
+    reader.onload = () => {
+      const node = view.state.schema.nodes.image.create({ src: reader.result as string })
+      const { tr } = view.state
+      if (pos === undefined) tr.replaceSelectionWith(node)
+      else {
+        // Block image at a drop point that may be mid-paragraph: replaceRangeWith
+        // finds a valid spot (splitting the paragraph if needed).
+        const at = Math.min(pos, tr.doc.content.size)
+        tr.replaceRangeWith(at, at, node)
+      }
+      view.dispatch(tr)
+    }
+    reader.readAsDataURL(file)
+  })
+}
 
 /**
  * Image node with width + alignment, a resize NodeView, and clipboard-paste of
@@ -75,20 +101,21 @@ export const ResizableImage = Image.extend({
             // image-only clipboard (screenshot, image copied from a browser —
             // which has HTML `<img>` but no text) is still embedded as base64.
             if (data?.getData('text/plain').trim()) return false
-            const files = Array.from(data?.files ?? []).filter((f) =>
-              f.type.startsWith('image/')
-            )
+            const files = imageFiles(data)
             if (files.length === 0) return false
             event.preventDefault()
-            files.forEach((file) => {
-              const reader = new FileReader()
-              reader.onload = () => {
-                const src = reader.result as string // base64 data URI
-                const node = view.state.schema.nodes.image.create({ src })
-                view.dispatch(view.state.tr.replaceSelectionWith(node))
-              }
-              reader.readAsDataURL(file)
-            })
+            insertImageFiles(view, files)
+            return true
+          },
+          // Image files dragged in from the desktop are embedded at the drop
+          // point (other drops — text, moving nodes — keep the default).
+          handleDrop: (view, event, _slice, moved) => {
+            if (moved) return false
+            const files = imageFiles(event.dataTransfer)
+            if (files.length === 0) return false
+            event.preventDefault()
+            const at = view.posAtCoords({ left: event.clientX, top: event.clientY })
+            insertImageFiles(view, files, at?.pos)
             return true
           }
         }

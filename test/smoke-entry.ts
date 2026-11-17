@@ -186,6 +186,21 @@ const imgWord = exportWord(imgFile)
 assert(/<img/.test(imgWord) && imgWord.includes(b64), 'image embedded in Word export')
 assert(/<p align="center"><img/.test(imgWord), 'centered image wrapped for Word')
 
+// Tampered theme values must not break out of the <style> block (A5).
+const evilTheme = {
+  ...defaultTheme,
+  bodyFont: "Arial; } body { display:none } </style><script>alert(1)</script>",
+  topBarColor: 'red;}</style><script>x()</script>'
+}
+const evil = { version: 1 as const, title: 'T', lang: 'ko' as const, theme: evilTheme, tiptapDoc: doc }
+const evilHtml = exportHtml(evil)
+const evilStyle = evilHtml.slice(evilHtml.indexOf('<style>'), evilHtml.indexOf('</style>') + 8)
+assert(!/<script/i.test(evilStyle) && (evilHtml.match(/<\/style>/g) || []).length === 1, 'theme values cannot close <style> / inject <script> (HTML)')
+const themeBlock = evilHtml.slice(evilHtml.lastIndexOf('--doc-topbar-bg:'))
+assert(themeBlock.slice(0, themeBlock.indexOf('}')).includes('--doc-font-size:'), 'theme values cannot close the variable block early (no injected CSS rules)')
+const evilWord = exportWord(evil)
+assert((evilWord.match(/<\/style>/g) || []).length === 1 && !/alert\(1\)<\/script>/.test(evilWord), 'theme values cannot inject into Word export')
+
 import { writeFileSync } from 'node:fs'
 writeFileSync('out/sample.html', html, 'utf-8')
 writeFileSync('out/sample.doc', word, 'utf-8')

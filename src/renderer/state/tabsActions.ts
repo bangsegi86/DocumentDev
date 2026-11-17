@@ -127,9 +127,21 @@ export function newTab(editor: Editor): void {
 }
 
 /** Open a file. Reuses the active tab if it's a pristine, empty "Untitled". */
-export async function openTab(editor: Editor): Promise<void> {
-  const res = await window.api.openFile()
+export async function openTab(
+  editor: Editor,
+  given?: { path: string | null; contents: string }
+): Promise<void> {
+  const res = given ? { canceled: false, ...given } : await window.api.openFile()
   if (res.canceled || !res.contents) return
+  // Already open? Just switch to that tab instead of opening a duplicate.
+  const { tabs, activeId } = useTabsStore.getState()
+  const livePath = useDocumentStore.getState().filePath
+  const existing =
+    res.path && tabs.find((t) => (t.id === activeId ? livePath : t.filePath) === res.path)
+  if (existing) {
+    activateTab(editor, existing.id)
+    return
+  }
   const payload = extractPayload(res.contents)
   if (!payload) {
     window.alert('This file was not created by DocumentDev (no editable data found).')

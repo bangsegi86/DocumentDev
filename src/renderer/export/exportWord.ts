@@ -5,6 +5,7 @@ import { highlightCodeBlocks } from '../lib/highlighter'
 import { inlineColors } from './inlineColors'
 import { HIGHLIGHT_CSS } from './highlightCss'
 import { escapeHtml } from './template'
+import { cssSafeTheme } from '../theme/themeToCss'
 
 /**
  * Give every table colgroup equal percentage column widths summing to 100%.
@@ -42,7 +43,7 @@ export function exportWord(docFile: DocFile): string {
     )
   )
   const title = escapeHtml(docFile.title || docFile.theme.titleText)
-  const theme = docFile.theme
+  const theme = cssSafeTheme(docFile.theme)
 
   return `<!doctype html>
 <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40">

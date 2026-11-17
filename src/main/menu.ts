@@ -50,6 +50,10 @@ const STRINGS: Record<Lang, Labels> = {
   }
 }
 
+// Remembered here because the menu is rebuilt (e.g. on a language switch),
+// which would otherwise reset the checkbox while spellcheck stays on.
+let spellcheckOn = false
+
 function send(action: MenuAction): void {
   const win = BrowserWindow.getFocusedWindow() ?? BrowserWindow.getAllWindows()[0]
   win?.webContents.send(IPC.menuAction, action)
@@ -91,7 +95,15 @@ export function buildMenu(lang: Lang): void {
     {
       label: t.view,
       submenu: [
-        { label: t.spellcheck, type: 'checkbox', checked: false, click: () => send('toggleSpellcheck') },
+        {
+          label: t.spellcheck,
+          type: 'checkbox',
+          checked: spellcheckOn,
+          click: (item) => {
+            spellcheckOn = item.checked
+            send('toggleSpellcheck')
+          }
+        },
         { type: 'separator' },
         { label: t.toggleLang, click: () => send('toggleLang') },
         { type: 'separator' },

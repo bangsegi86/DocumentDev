@@ -303,6 +303,33 @@ function Workbench(): JSX.Element {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [editor, lang])
 
+  // Drag & drop files onto the window: .html documents open in a tab. Image
+  // drops onto the editor are handled by the image extension. Anything else is
+  // swallowed so the browser never navigates away from the editor.
+  useEffect(() => {
+    if (!editor) return
+    const onDragOver = (e: DragEvent): void => {
+      if (e.dataTransfer?.types.includes('Files')) e.preventDefault()
+    }
+    const onDrop = (e: DragEvent): void => {
+      const files = Array.from(e.dataTransfer?.files ?? [])
+      if (files.length === 0) return
+      const docs = files.filter((f) => /\.html?$/i.test(f.name))
+      if (docs.length > 0 || !e.defaultPrevented) e.preventDefault()
+      void (async () => {
+        for (const f of docs) {
+          await openTab(editor, { path: window.api.pathForFile(f) || null, contents: await f.text() })
+        }
+      })()
+    }
+    window.addEventListener('dragover', onDragOver)
+    window.addEventListener('drop', onDrop)
+    return () => {
+      window.removeEventListener('dragover', onDragOver)
+      window.removeEventListener('drop', onDrop)
+    }
+  }, [editor])
+
   // Seed the first tab, then offer to restore any crash-recovery snapshots.
   useEffect(() => {
     if (!editor) return
