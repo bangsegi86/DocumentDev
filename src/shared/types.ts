@@ -95,6 +95,7 @@ export const IPC = {
   recentOpen: 'recent:open',
   recentClear: 'recent:clear',
   openFromOS: 'file:openFromOS',
+  openDropped: 'file:openDropped',
   rendererReady: 'app:rendererReady'
 } as const
 
@@ -123,8 +124,13 @@ export interface DocApi {
   /** Open the system print dialog for the exported HTML. */
   print(html: string): Promise<boolean>
   openImage(): Promise<ImageResult>
-  /** Absolute path of a File from a drag-and-drop (empty if unknown). */
-  pathForFile(file: File): string
+  /**
+   * Open a document file the user dropped on the window. The main process
+   * reads it (so it can be saved back in place, like a file chosen in the
+   * Open dialog). error 'NOPATH' = the item has no file on disk (e.g. from a
+   * zip or mail attachment); the caller then reads it as an unsaved copy.
+   */
+  openDroppedFile(file: File): Promise<OpenResult>
   setMenuLang(lang: Lang): void
   onMenuAction(handler: (action: MenuAction) => void): () => void
   /** Tell the main process whether the document has unsaved changes. */

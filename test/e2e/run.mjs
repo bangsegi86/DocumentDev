@@ -241,6 +241,46 @@ await suite('끌어다 놓기 / 화면 이동 차단 / 외부 링크', async () 
   check('그림을 본문에 놓으면 삽입', (await drop('.ProseMirror p', 'x.png', 'image/png', PNG_1PX, true)) && (await win.waitForSelector('.ProseMirror img').then(() => true, () => false)))
   check('그 밖의 파일은 무시(화면 유지)', (await drop('.toolbar', 'x.zip', 'application/zip', 'zz')) && !!(await win.$('.ProseMirror')))
 
+  // A real dropped file (with a path on disk, via a file input) saves back in place.
+  // ASCII name on purpose: Playwright's setInputFiles silently attaches nothing
+  // for a non-ASCII file name (the app itself handles Korean paths; see the
+  // 문서A/문서B tests below).
+  const real = join(work, 'dropped-real.html')
+  writeFileSync(real, docHtml('끌어다놓은문서', '원래 내용'))
+  await win.evaluate(() => {
+    const i = document.createElement('input')
+    i.type = 'file'
+    i.id = 'e2e-probe'
+    i.style.cssText = 'position:fixed;left:-9999px;top:0'
+    document.body.appendChild(i)
+  })
+  await win.setInputFiles('#e2e-probe', real)
+  await win.evaluate(() => {
+    const dt = new DataTransfer()
+    dt.items.add(document.getElementById('e2e-probe').files[0])
+    document.querySelector('.doc-sidebar').dispatchEvent(new DragEvent('drop', { dataTransfer: dt, bubbles: true, cancelable: true }))
+  })
+  await win.waitForFunction(() => document.querySelector('.ProseMirror').innerText.includes('원래 내용'), null, { timeout: 5000 }).catch(() => {})
+  check('실제 파일을 끌어다 놓으면 그 파일로 열림', (await win.textContent('.app-file-name')) === 'dropped-real.html', await win.textContent('.app-file-name'))
+  let refused = ''
+  const onDialog = (d) => {
+    refused = d.message()
+    void d.dismiss()
+  }
+  win.on('dialog', onDialog)
+  const before = statSync(real).mtimeMs
+  await win.click('.bar-btn-primary')
+  await win.waitForTimeout(600)
+  check('고치지 않고 바로 저장해도 거부되지 않음', !refused && statSync(real).mtimeMs >= before, refused)
+  await win.click('.ProseMirror p')
+  await win.keyboard.press('End')
+  await win.keyboard.type(' 수정')
+  await win.click('.bar-btn-primary')
+  await win.waitForTimeout(600)
+  win.off('dialog', onDialog)
+  check('수정 후 저장하면 원래 파일에 써짐', !refused && readFileSync(real, 'utf8').includes('원래 내용 수정'), refused)
+  await win.evaluate(() => document.getElementById('e2e-probe').remove())
+
   await win.evaluate(() => {
     window.open('https://example.com/a')
     window.open('mailto:a@b.c')

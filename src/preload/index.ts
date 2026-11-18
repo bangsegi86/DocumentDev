@@ -11,7 +11,13 @@ const api: DocApi = {
   exportPdf: (suggestedName, html, lang) => ipcRenderer.invoke(IPC.fileExportPdf, suggestedName, html, lang),
   print: (html) => ipcRenderer.invoke(IPC.filePrint, html),
   openImage: () => ipcRenderer.invoke(IPC.imageOpen),
-  pathForFile: (file: File) => webUtils.getPathForFile(file),
+  // The path comes from the dropped File itself (webUtils), never from page
+  // script, so a page can't make the main process read or allow any path.
+  openDroppedFile: async (file: File) => {
+    const path = webUtils.getPathForFile(file)
+    if (!path) return { canceled: false, error: 'NOPATH' }
+    return ipcRenderer.invoke(IPC.openDropped, path)
+  },
   setMenuLang: (lang: Lang) => ipcRenderer.send(IPC.setMenuLang, lang),
   onMenuAction: (handler) => {
     const listener = (_e: unknown, action: MenuAction): void => handler(action)

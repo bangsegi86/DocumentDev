@@ -510,7 +510,10 @@ function Workbench(): JSX.Element {
       if (docs.length > 0 || !e.defaultPrevented) e.preventDefault()
       void (async () => {
         for (const f of docs) {
-          await openTab(editor, { path: window.api.pathForFile(f) || null, contents: await f.text() })
+          const res = await window.api.openDroppedFile(f)
+          // No file on disk behind it: open as an unsaved copy (Save asks where).
+          if (res.error === 'NOPATH') await openTab(editor, { path: null, contents: await f.text() })
+          else await openTab(editor, res)
         }
       })()
     }

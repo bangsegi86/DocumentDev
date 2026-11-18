@@ -28,6 +28,13 @@ export function registerFileHandlers(): void {
   })
   ipcMain.handle(IPC.filePrint, (_event, html: string) => printDocument(html))
 
+  // Reached only through preload's openDroppedFile (path taken from a real
+  // dropped File). Documents only.
+  ipcMain.handle(IPC.openDropped, (_event, path: string) => {
+    if (typeof path !== 'string' || !/\.html?$/i.test(path)) return { canceled: false, path, error: 'ENOTALLOWED' }
+    return readDocument(path)
+  })
+
   ipcMain.handle(IPC.recentList, () => getRecent())
   ipcMain.handle(IPC.recentOpen, async (_event, path: string) => {
     const recent = await getRecent()
